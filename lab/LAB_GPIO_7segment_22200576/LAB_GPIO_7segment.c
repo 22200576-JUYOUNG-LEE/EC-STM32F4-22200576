@@ -31,7 +31,7 @@ void setup(void){
     // Intialize System Clock
     RCC_HSI_init();    
 
-    // Intialize FND pins and Button!!
+    // Intialize FND pins and Button
     FND_display_init(pinFND);
     FND_select_init(selectFND);   
 
