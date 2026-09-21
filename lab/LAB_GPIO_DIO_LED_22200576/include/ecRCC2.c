@@ -19,7 +19,7 @@ void RCC_HSI_init() { // HSI = internal High Speed Clock (16 MHz)
 	
   // wait until HSI is ready
   //while ( (RCC->CR & (uint32_t) RCC_CR_HSIRDY) == 0 ) {;}
-	while ( (RCC->CR & 0x00000002U) == 0 ) {;}
+	while ( (RCC->CR & 0x00000002U) == 0 ) {;} 
 	
   // Select HSI as system clock source 
   	RCC->CFGR &= (uint32_t)(~RCC_CFGR_SW); 								// not essential
@@ -30,6 +30,8 @@ void RCC_HSI_init() { // HSI = internal High Speed Clock (16 MHz)
 
 	EC_SYSCLK=16000000;	
 }
+
+// void RCC_HSE_init() // make your self!
 
 
 void RCC_PLL_init() {	
