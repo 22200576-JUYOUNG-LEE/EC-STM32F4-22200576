@@ -2,7 +2,7 @@
 @ Embedded Controller by Young-Keun Kim - Handong Global University
 Author           : [ Juyoung Lee ]
 Created          : 09-11-2026
-Modified         : 09-12-2026
+Modified         : 09-13-2026
 Language/ver     : C in VS Code
 
 Description      : Control PB_12 LED state using PA_0 Photodetector digital input
