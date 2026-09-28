@@ -321,14 +321,17 @@ void FND_select(uint8_t digit){
 
 ```
 
+
+#### Result
+![[Pasted image 20260923212955.png|479]]
 ---
 ## <font color="#205867">Problem 2: Counter with Button Press <a href="#problem-1-display-a-number-with-button-press" id="problem-1-display-a-number-with-button-press"></a></font>
 
 #### Procedure
 
-Create a code that increases the displayed number from 0 to 9 with each button press.
+Create a code that increases the displayed number from 0 to 19 with each button press.
 
-- After the number '9', it should start from '0' again.
+- After the number '19', it should start from '0' again.
     
 - Modify from Problem 1 source code
 
