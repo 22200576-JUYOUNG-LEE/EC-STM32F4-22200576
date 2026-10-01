@@ -1,8 +1,8 @@
 # PreLAB: SysTick
 
-Name:
+Name: Juyoung Lee
 
-ID:
+ID: 22200576
 
 ## I. Introduction
 
@@ -92,17 +92,17 @@ void SysTick_init(void){
 
 	// Select processor clock
 	// 1 = processor clock;  0 = external clock
-	SysTick->CTRL |=  ______________  // [YOUR CODE GOES HERE!!]
+	SysTick->CTRL |=   SysTick_CTRL_CLKSOURCE_Msk
 
 
 	// Enables SysTick exception request
 	// 1 = counting down to zero --> SysTick exception request 
-	SysTick->CTRL |=  ______________  // [YOUR CODE GOES HERE!!]
+	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk
 
 
 	// SysTick Reload Value Register : (SYSCLK / 1000) - 1  ->  1 ms
     // EC_SYSCLK :  HSI 16 MHz or PLL 84 MHz
-	SysTick->LOAD =  ______________  // [YOUR CODE GOES HERE!!]
+	SysTick->LOAD =  (uint32_t)EC_SYSCLK *1UL/ 1000UL - 1UL;   // 1[ms] = 1/1000[s]
 
         
 	// SysTick Current Value Register : Reset counter value to 0

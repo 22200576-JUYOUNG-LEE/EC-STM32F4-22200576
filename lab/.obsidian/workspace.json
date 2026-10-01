@@ -11,14 +11,12 @@
             "id": "dc3b6e434c4ccced",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "pdf",
               "state": {
-                "file": "PreLAB_SysTick/PreLAB_SysTick_22200576_JuyoungLee.md",
-                "mode": "source",
-                "source": false
+                "file": "PreLAB_ External Interrupt/report/PreLAB_EXTI_22200576_JuyoungLee.pdf"
               },
-              "icon": "lucide-file",
-              "title": "PreLAB_SysTick_22200576_JuyoungLee"
+              "icon": "lucide-file-text",
+              "title": "PreLAB_EXTI_22200576_JuyoungLee"
             }
           }
         ]
@@ -83,8 +81,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 318.6429100036621,
-    "collapsed": true
+    "width": 380.3571434020996
   },
   "right": {
     "id": "8bcd919ad1c0ea1c",
@@ -100,7 +97,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Welcome.md",
+                "file": "PreLAB_ External Interrupt/report/PreLAB_ External Interrupt_JuyoungLee_22200576.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -175,7 +172,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
+    "width": 200,
     "collapsed": true
   },
   "left-ribbon": {
@@ -191,33 +188,33 @@
   },
   "active": "dc3b6e434c4ccced",
   "lastOpenFiles": [
-    "LAB_EXTI&SysTick/LAB_EXTI & SysTick(eval board).md",
+    "PreLAB_ External Interrupt/report/PreLAB_EXTI_22200576_JuyoungLee.md",
     "PreLAB_SysTick/PreLAB_SysTick_22200576_JuyoungLee.md",
     "LAB_GPIO_7segment_22200576/report/LAB_GPIO_7segment_22200576_JuyoungLee.md",
+    "LAB_GPIO_InOut_LED_22200576/report/LAB_GPIO_InOut_22200576_JuyoungLee.md",
+    "LAB_EXTI&SysTick/LAB_EXTI & SysTick(eval board).md",
+    "PreLAB_ External Interrupt/report/PreLAB_EXTI_22200576_JuyoungLee.pdf",
+    "PreLAB_ External Interrupt/report/img/Pasted image 20260930233516.png",
+    "PreLAB_ External Interrupt/report/img/Pasted image 20260930233159.png",
+    "PreLAB_ External Interrupt/report/img/Pasted image 20260930232915.png",
+    "PreLAB_ External Interrupt/report/img/Pasted image 20260930232900.png",
+    "PreLAB_ External Interrupt/report/img/Pasted image 20260930232830.png",
+    "Pasted image 20260930233516.png",
+    "Pasted image 20260930233159.png",
+    "Pasted image 20260930232915.png",
+    "Pasted image 20260930232900.png",
+    "Pasted image 20260930232830.png",
     "LAB_GPIO_7segment_22200576/report/LAB_GPIO_7segment_22200576_JuyoungLee.pdf",
-    "Pasted image 20260923212955.png",
     "LAB_GPIO_7segment_22200576/LAB_GPIO_7segment_P2.c",
     "LAB_GPIO_7segment_22200576/LAB_GPIO_7segment_P1.c",
     "LAB_GPIO_7segment_22200576/LAB_GPIO_7segment2.c",
     "LAB_GPIO_7segment_22200576/LAB_GPIO_7segment1.c",
     "LAB_GPIO_InOut_LED_22200576.zip",
-    "PreLAB_ External Interrupt/report/PreLAB_ External Interrupt_JuyoungLee_22200576.md",
     "LAB_GPIO_InOut_LED_22200576/report/LAB_GPIO_InOut22200576_JuyoungLee.pdf",
-    "LAB_GPIO_InOut_LED_22200576/report/LAB_GPIO_InOut_22200576_JuyoungLee.md",
     "LAB_GPIO_InOut_LED_22200576/report/LAB_GPIO_InOut_LED_22200576_JuyoungLee.md",
-    "LAB_GPIO_InOut_LED_22200576/report/img/Pasted image 20260918192816.png",
-    "LAB_GPIO_InOut_LED_22200576/report/img/Pasted image 20260918194518.png",
-    "LAB_GPIO_InOut_LED_22200576/report/img/Pasted image 20260918192816 1.png",
-    "LAB_GPIO_InOut_LED_22200576/report/img/Pasted image 20260918192754.png",
-    "LAB_GPIO_InOut_LED_22200576/report/img/Pasted image 20260918193743.png",
-    "LAB_GPIO_InOut_LED_22200576/report/img/Pasted image 20260913204523.png",
-    "LAB_GPIO_InOut_LED_22200576/report/img/Pasted image 20260918152521.png",
-    "LAB_GPIO_InOut_LED_22200576/report/img/Pasted image 20260913204453.png",
-    "LAB_GPIO_InOut_LED_22200576/report/img/Pasted image 20260918152758.png",
     "LAB_GPIO_InOut_LED_22200576/report/LAB_GPIO_DIO_LED_22200576_JuyoungLee.pdf",
     "LAB_GPIO_InOut_LED_22200576/report/LAB_GPIO_DIO_LED_22200576_JuyoungLee.md",
     "LAB_GPIO_InOut_LED_22200576/report/img",
-    "LAB_GPIO_InOut_LED_22200576/include/ecRCC2.h",
     "LAB_Stepper_Motor/LAB_Stepper Motor.md",
     "LAB_GPIO_DIO_LED_22200576/report/LAB_GPIO_DIO_LED_22200576_JuyoungLee.md",
     "LAB_GPIO_DIO_22200576_JuyoungLee.pdf.md",

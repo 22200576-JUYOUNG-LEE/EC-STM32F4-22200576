@@ -1,12 +1,8 @@
 # PreLAB: External Interrupt
 
-**Date:** 2026-09-02
+**Date:** 2026-09-30
 
-**Author/Partner:** YOUR NAME GOES HERE
-
-**Demo Video:** Youtube link
-
-**PDF version:**
+**Author/Partner:** Juyoung Lee
 
 ***
 
@@ -67,7 +63,7 @@ typedef struct
 * Enable EXTI: **EXTI->IMR**
   * Not-mask Interrupt request
 
-**3. NVIC**&#x20;
+**3. NVIC**
 
 * `NVIC_SetPriority()`
 * `NVIC_EnableIRQ()`
@@ -77,7 +73,7 @@ typedef struct
 * is\_pending ? Then `EXTIx_IRQHandler()`
 * clear\_pending when finished
 
-## Exercise&#x20;
+## Exercise
 
 ### A. Exercise 1: Register Configuration
 
@@ -93,7 +89,8 @@ Fill in the blanks below
 
 ```c
 // Use your API library  GPIO
-
+GPIO_init(PA_4, INPUT);  
+GPIO_pupd(PA_4, PULL_UP);
 
 ```
 
@@ -105,7 +102,7 @@ Fill in the blanks below
 
   ```c
   // SYSCFG peripheral clock enable
-  RCC->APB2ENR |= __________________
+  RCC->APB2ENR |= (1UL << 14)
   ```
 
   <figure><img src="https://3453146497-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F-MgmrEstOHxu62gXxq1t%2Fuploads%2Fgit-blob-22a479648a995e84c2e4abf7be52e552109bf0e8%2Fimage-20260915192550889.png?alt=media" alt=""><figcaption></figcaption></figure>
@@ -146,8 +143,8 @@ Fill in the blanks below
   	else if	(Port == GPIOD) EXTICR_port = 3;
   	else					EXTICR_port = 4;
   	
-  	SYSCFG->EXTICR[_______] &= ________________;			// clear 4 bits
-  	SYSCFG->EXTICR[_______] |= ________________;			// Set 4 bits	
+  	SYSCFG->EXTICR[pin / 4] &= ~(0xFUL << ((pin % 4) * 4)); // clear 4 bits 
+  	SYSCFG->EXTICR[pin / 4] |= (EXTICR_port << ((pin % 4) * 4)); // Set 4 bits
   ```
 
 > HINT 1 : mod(pin,4) \* 4, (int)(pin/4)
@@ -168,14 +165,14 @@ Fill in the blanks below
 
   ```c
   	// Select  Trigger edge (RISE, FALL, BOTH)
-  	if (trig_type == FALL) 		EXTI->FTSR |= 1UL << __________;  // Falling trigger enable 
-  	else if	(trig_type == RISE) EXTI->RTSR |= 1UL << __________;   // Rising trigger enable 
+  	if (trig_type == FALL) 		EXTI->FTSR |= 1UL << pin;  // Falling trigger enable 
+  	else if	(trig_type == RISE) EXTI->RTSR |= 1UL << pin;   // Rising trigger enable 
   	else if	(trig_type == BOTH) {			// Both falling/rising trigger enable
-  		EXTI->RTSR |= _______; 
-  		EXTI->FTSR |= _______;
+  		EXTI->RTSR |= pin; 
+  		EXTI->FTSR |= pin;
   ```
 
-  ![[Pasted image 20260923113854.png]]
+  ![[Pasted image 20260930232915.png]]
 
 4. **Enable EXTI: Not-masking Interrupt request**
 
@@ -185,29 +182,29 @@ Fill in the blanks below
 ```c
 	// Enable EXTI, with Not-Masked Interrupt Request 
 	// Not-mask (==Enable) EXTIx
- 	EXTI->IMR |= 1UL << ___________;
+ 	EXTI->IMR |= 1UL << pin;
 ```
 
-![image-20260915201322828](https://3453146497-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F-MgmrEstOHxu62gXxq1t%2Fuploads%2Fgit-blob-4c4caee2014a3697562a1810f9ebb135e4aa27fc%2Fimage-20260915201322828.png?alt=media)
+![[Pasted image 20260930233159.png]]
 
 #### EXTI\_NVIC
 
 * Search for "**Vector table for STM32F411xC/E** " in Reference Manual
 * Fill-in the blanks in the table for EXTI 0 to EXT 15
 
-<table data-search="false"><thead><tr><th>EXTIx</th><th>ISR (handler)</th><th>IRQn (keyword, stm32f111xe.h)</th><th>IRQn</th></tr></thead><tbody><tr><td>EXTI0</td><td>EXTI0_IRQHandler()</td><td>EXTI0_IRQn</td><td>6</td></tr><tr><td>EXTI1</td><td></td><td>EXTI1_IRQn</td><td></td></tr><tr><td>EXTI2</td><td></td><td></td><td></td></tr><tr><td>EXTI3</td><td></td><td></td><td></td></tr><tr><td>EXTI4</td><td></td><td></td><td></td></tr><tr><td>EXTI5_9</td><td></td><td></td><td></td></tr><tr><td>EXTI10_15</td><td>EXTI15_10_IRQHandler()</td><td>EXTI15_10_IRQn</td><td>40</td></tr></tbody></table>
+![[Pasted image 20260930233516.png]]
 
 * Fill-in the blanks
 
 ```c
 	// NVIC(IRQ) Setting
 	uint32_t EXTI_IRQn = 0;
-	if (pin < 5) 				EXTI_IRQn = _______;
-	else if	(pin < 10) 	EXTI_IRQn = _______;
-	else 								EXTI_IRQn = EXTI15_10_IRQn;
+	if (pin < 5) 		EXTI_IRQn = EXTI0_IRQn + pin;
+	else if	(pin < 10) 	EXTI_IRQn = EXTI9_5_IRQn;
+	else 				EXTI_IRQn = EXTI15_10_IRQn;
 		
 	NVIC_SetPriority(EXTI_IRQn, priority);	
-	NVIC_EnableIRQ(EXTI_IRQn); 		
+	NVIC_EnableIRQ(EXTI_IRQn); 	
 ```
 
 #### EXTI\_handler
@@ -222,8 +219,8 @@ uint32_t is_pending_EXTI(PinName_t pinName) {
 	unsigned int pin;
 	ecPinmap(pinName,&Port,&pin);
     
-	uint32_t EXTI_PRx = _______;     	// read PRx, EXTI pending bit.  Use  (REG>>k & 1) to read.
-	return ________;  								// Return only 0 or 1
+	uint32_t EXTI_PRx = (EXTI->PR>> pin)&1UL);     	// read PRx, EXTI pending bit.  Use  (REG>>k & 1) to read.
+	return EXTI_PRx;  								// Return only 0 or 1
 }
 
 ```
@@ -271,13 +268,14 @@ Complete the function  `led_toggle(void)`
 ```c
 /*----------------------------------------------------------------\
 @ Embedded Controller by Young-Keun Kim - Handong Global University
-Author           : [ YOUR NAME GOES HERE !!!!!]
+Author           : Juyoung Lee
 Created          : 05-03-2021
 Modified         : 09-09-2026
 Language/ver     : C++ in VS Code
 
-Description      : Tutorial - [Your Description GOES HERE !!] 
+Description      : Tutorial - led toggling by EXTI
 /----------------------------------------------------------------*/
+
 
 
 #include "ecRCC2.h"
@@ -295,8 +293,7 @@ void led_toggle(PinName_t pinName){
 	unsigned int pin;
 	ecPinmap(pinName,&Port,&pin);
     
-	// YOUR CODE GOES HERE - Use XOR 
-	// [YOUR CODE GOES HERE]
+	Port->ODR ^= (1UL << pin);
 }
 
 // Initialiization 

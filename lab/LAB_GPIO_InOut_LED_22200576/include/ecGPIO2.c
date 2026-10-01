@@ -63,8 +63,8 @@ void GPIO_pupd(PinName_t pinName, uint32_t pupd){
 	unsigned int pin;
 	ecPinmap(pinName,&Port,&pin);
 
-	Port->PUPDR &= ~(3UL << pin);
-	Port->PUPDR |= 	(pupd <<pin);
+	Port->PUPDR &= ~(3UL << (pin * 2));
+	Port->PUPDR |= 	(pupd <<(pin * 2));
 }
 
 // Write digital output state
