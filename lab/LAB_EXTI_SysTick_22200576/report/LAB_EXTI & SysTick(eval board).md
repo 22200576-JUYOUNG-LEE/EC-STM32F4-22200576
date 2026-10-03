@@ -4,11 +4,9 @@
 
 **Date:** 2026-09-02
 
-**Author/Partner:** YOUR NAME GOES HERE
+**Author/Partner:** Juyoung Lee
 
 **Demo Video:** Youtube link
-
-**PDF version:**
 
 ### Introduction
 

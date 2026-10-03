@@ -8,9 +8,11 @@ Language/ver     : C in VS Code
 Description      : Control 7-segments display 
 /----------------------------------------------------------------*/
 
-#include "stm32f4xx.h"
-#include "ecGPIO2.h"
-#include "ecRCC2.h"
+// #include "stm32f4xx.h"
+// #include "ecGPIO2.h"
+// #include "ecRCC2.h"
+
+#include "ecSTM32F4v2.h"
 
 #define BUTTON_PIN      PA_4
 #define BUTTON_DLAY     30
@@ -29,7 +31,9 @@ uint8_t selectFND2      = 1;
 
 void setup(void){
     // Intialize System Clock
-    RCC_HSI_init();    
+    // RCC_HSI_init();    
+
+    MCU_init();
 
     // Intialize FND pins and Button
     FND_display_init(pinFND);

@@ -17,8 +17,9 @@ Description      : Tutorial Digital InOut
 
 
 
-#include "stm32f411xe.h"
-#include "ecRCC2.h"
+// #include "stm32f411xe.h"
+// #include "ecRCC2.h"
+#include "ecSTM32F4v2.h"
 
 #define LED_PIN    5		//LD2
 #define BUTTON_PIN 13		// B1 Button
@@ -28,10 +29,6 @@ int main(void) {
 		RCC_HSI_init();
 		RCC_GPIOA_enable();
 		RCC_GPIOC_enable();
-
-	/*---------------------------------------------------------------- 
-                    [EXERCISE]
-	---------------------------------------------------------------- */
 
 
 	/// Part 2. GPIO Register Setting for OUTPUT ///			

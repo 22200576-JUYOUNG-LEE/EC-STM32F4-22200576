@@ -11,12 +11,14 @@
             "id": "dc3b6e434c4ccced",
             "type": "leaf",
             "state": {
-              "type": "pdf",
+              "type": "markdown",
               "state": {
-                "file": "PreLAB_ External Interrupt/report/PreLAB_EXTI_22200576_JuyoungLee.pdf"
+                "file": "PreLAB_SysTick/PreLAB_SysTick_22200576_JuyoungLee.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-file-text",
-              "title": "PreLAB_EXTI_22200576_JuyoungLee"
+              "icon": "lucide-file",
+              "title": "PreLAB_SysTick_22200576_JuyoungLee"
             }
           }
         ]
@@ -81,7 +83,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 380.3571434020996
+    "width": 380.3571434020996,
+    "collapsed": true
   },
   "right": {
     "id": "8bcd919ad1c0ea1c",
@@ -188,33 +191,41 @@
   },
   "active": "dc3b6e434c4ccced",
   "lastOpenFiles": [
-    "PreLAB_ External Interrupt/report/PreLAB_EXTI_22200576_JuyoungLee.md",
+    "LAB_EXTI_SysTick_22200576/report/LAB_EXTI & SysTick(eval board).md",
+    "LAB_EXTI_SysTick_22200576/report",
+    "LAB_EXTI_SysTick_22200576/LAB_EXTI.c",
+    "LAB_EXTI_SysTick_22200576",
+    "LAB_EXTI_SysTick/report/LAB_EXTI & SysTick(eval board).md",
+    "LAB_EXTI_SysTick/report",
+    "LAB_EXTI_SysTick/LAB_EXTI.c",
+    "LAB_EXTI_SysTick",
+    "LAB_EXTI&SysTick/report/LAB_EXTI & SysTick(eval board).md",
+    "LAB_EXTI&SysTick/report",
+    "LAB_EXTI&SysTick/LAB_EXTI.c",
+    "LAB_EXTI&SysTick",
+    "LAB_EXTI_SysTick_22200576/report/Untitled.md",
+    "LAB_EXTI_SysTick_22200576/report/Pasted image 20261001135235.png",
+    "LAB_EXTI_SysTick/report/Untitled.md",
+    "LAB_EXTI_SysTick/report/Pasted image 20261001135235.png",
+    "LAB_EXTI&SysTick/New 텍스트 문서.txt",
+    "LAB_EXTI&SysTick/report/Untitled.md",
+    "LAB_EXTI&SysTick/report/Pasted image 20261001135235.png",
     "PreLAB_SysTick/PreLAB_SysTick_22200576_JuyoungLee.md",
+    "Untitled.md",
+    "LAB_EXTI&SysTick/Untitled.md",
+    "LAB_EXTI&SysTick/Pasted image 20261001135235.png",
+    "Pasted image 20261001135235.png",
+    "PreLAB_ External Interrupt/report/PreLAB_EXTI_22200576_JuyoungLee.md",
     "LAB_GPIO_7segment_22200576/report/LAB_GPIO_7segment_22200576_JuyoungLee.md",
     "LAB_GPIO_InOut_LED_22200576/report/LAB_GPIO_InOut_22200576_JuyoungLee.md",
     "LAB_EXTI&SysTick/LAB_EXTI & SysTick(eval board).md",
-    "PreLAB_ External Interrupt/report/PreLAB_EXTI_22200576_JuyoungLee.pdf",
     "PreLAB_ External Interrupt/report/img/Pasted image 20260930233516.png",
     "PreLAB_ External Interrupt/report/img/Pasted image 20260930233159.png",
     "PreLAB_ External Interrupt/report/img/Pasted image 20260930232915.png",
     "PreLAB_ External Interrupt/report/img/Pasted image 20260930232900.png",
     "PreLAB_ External Interrupt/report/img/Pasted image 20260930232830.png",
-    "Pasted image 20260930233516.png",
-    "Pasted image 20260930233159.png",
-    "Pasted image 20260930232915.png",
-    "Pasted image 20260930232900.png",
-    "Pasted image 20260930232830.png",
-    "LAB_GPIO_7segment_22200576/report/LAB_GPIO_7segment_22200576_JuyoungLee.pdf",
-    "LAB_GPIO_7segment_22200576/LAB_GPIO_7segment_P2.c",
-    "LAB_GPIO_7segment_22200576/LAB_GPIO_7segment_P1.c",
-    "LAB_GPIO_7segment_22200576/LAB_GPIO_7segment2.c",
-    "LAB_GPIO_7segment_22200576/LAB_GPIO_7segment1.c",
-    "LAB_GPIO_InOut_LED_22200576.zip",
-    "LAB_GPIO_InOut_LED_22200576/report/LAB_GPIO_InOut22200576_JuyoungLee.pdf",
     "LAB_GPIO_InOut_LED_22200576/report/LAB_GPIO_InOut_LED_22200576_JuyoungLee.md",
-    "LAB_GPIO_InOut_LED_22200576/report/LAB_GPIO_DIO_LED_22200576_JuyoungLee.pdf",
     "LAB_GPIO_InOut_LED_22200576/report/LAB_GPIO_DIO_LED_22200576_JuyoungLee.md",
-    "LAB_GPIO_InOut_LED_22200576/report/img",
     "LAB_Stepper_Motor/LAB_Stepper Motor.md",
     "LAB_GPIO_DIO_LED_22200576/report/LAB_GPIO_DIO_LED_22200576_JuyoungLee.md",
     "LAB_GPIO_DIO_22200576_JuyoungLee.pdf.md",
