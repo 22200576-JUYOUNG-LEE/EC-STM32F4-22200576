@@ -23,14 +23,20 @@ Description      : STM32 F411 Library
 #include "ecGPIO2.h"
 #include "ecEXTI2.h"
 #include "ecSysTick2.h"
+#include "ecStepper2.h"
 //#include "ecTIM2.h"
 //#include "ecPWM2.h"
-//#include "ecStepper2.h"
 //#include "ecADC2.h"
 //#include "ecUART2.h"
 
-#define SW2_PIN_JK      PA_4
-#define SW1_PIN_JK      PD_2
+#define SW2_PIN_JK          PA_4
+#define SW1_PIN_JK          PD_2
+
+#define CW                  1
+#define CCW                -1
+
+#define EXTI_NUM_STATE      10
+#define EXTI_TIME_PREIOD    1000        // [ms]
 
 PinName_t pinFND[8]     = {PB_0, PB_1, PB_2, PB_3, PB_4, PB_5, PB_6, PB_7};
 PinName_t selectFND[4]  = {PA_10, PA_11, PC_4, PC_3};
@@ -43,7 +49,7 @@ void MCU_JK_init(void){
     // SysTick 1msec for delay 
     SysTick_init();  
     
-    // Switch1 = PD_2, Switch = PA_4
+    // Switch1 = PD_2, Switch2 = PA_4
     GPIO_init(SW1_PIN_JK, INPUT);
     GPIO_pupd(SW1_PIN_JK, PULL_UP);    
 
@@ -54,10 +60,13 @@ void MCU_JK_init(void){
     FND_display_init(pinFND);
     FND_select_init(selectFND);
 
+    // Initialize EXTI SW
+    EXTI_init(SW2_PIN_JK, FALL, 10);
+    EXTI_init(SW1_PIN_JK, FALL, 10);
+
     
 }
 
-// you should define MCU_JKIT_int() 
 void MCU_init(void){
     // CLOCK PLL 84MHz
     RCC_PLL_init();
