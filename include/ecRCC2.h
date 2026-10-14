@@ -31,10 +31,6 @@ void RCC_GPIOD_enable(void);
 void RCC_GPIOE_enable(void);
 void RCC_GPIOH_enable(void);
 
-/*---------------------------------------------------------------- 
-                    [EXERCISE]
----------------------------------------------------------------- */
-
 // void RCC_GPIO_enable(GPIO_TypeDef * GPIOx);
 
 

@@ -29,20 +29,23 @@ Description      : STM32 F411 Library
 //#include "ecADC2.h"
 //#include "ecUART2.h"
 
-#define SW2_PIN_JK          PA_4
-#define SW1_PIN_JK          PD_2
+#define SW1_PIN                 PC_13
+#define LED_PIN                 PA_5
 
-#define CW                  1
-#define CCW                -1
-
-#define EXTI_NUM_STATE      10
-#define EXTI_TIME_PREIOD    1000        // [ms]
-
-PinName_t pinFND[8]     = {PB_0, PB_1, PB_2, PB_3, PB_4, PB_5, PB_6, PB_7};
-PinName_t selectFND[4]  = {PA_10, PA_11, PC_4, PC_3};
+#define SW2_PIN_JK              PA_4
+#define SW1_PIN_JK              PD_2
 
 
-void MCU_JK_init(void){
+#define EXTI_NUM_STATE          10
+#define EXTI_TIME_PREIOD        1000        // [ms]
+
+#define STEPPER_SW1             P
+
+static PinName_t pinFND[8]     = {PB_0, PB_1, PB_2, PB_3, PB_4, PB_5, PB_6, PB_7};
+static PinName_t selectFND[4]  = {PA_10, PA_11, PC_4, PC_3};
+
+
+static inline void MCU_JK_init(void){
     // CLOCK PLL 84MHz
     RCC_PLL_init();
 
@@ -67,7 +70,7 @@ void MCU_JK_init(void){
     
 }
 
-void MCU_init(void){
+static inline void MCU_init(void){
     // CLOCK PLL 84MHz
     RCC_PLL_init();
     
