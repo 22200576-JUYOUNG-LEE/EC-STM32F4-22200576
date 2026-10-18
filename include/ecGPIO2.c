@@ -14,12 +14,22 @@ void GPIO_init(PinName_t pinName, uint32_t mode){
 	unsigned int pin;
 	ecPinmap(pinName, &Port, &pin);
 	 
-	if      (Port == GPIOA)		RCC_GPIOA_enable();
-	else if (Port == GPIOB)     RCC_GPIOB_enable();
-	else if (Port == GPIOC)     RCC_GPIOC_enable();
-	else if (Port == GPIOD)     RCC_GPIOD_enable();
-	else if (Port == GPIOE)     RCC_GPIOE_enable();
-	else if (Port == GPIOH)     RCC_GPIOH_enable();
+	// if      (Port == GPIOA)		RCC_GPIOA_enable();
+	// else if (Port == GPIOB)     RCC_GPIOB_enable();
+	// else if (Port == GPIOC)     RCC_GPIOC_enable();
+	// else if (Port == GPIOD)     RCC_GPIOD_enable();
+	// else if (Port == GPIOE)     RCC_GPIOE_enable();
+	// else if (Port == GPIOH)     RCC_GPIOH_enable();
+
+	uint32_t GPIO_port = 0;
+	if      (Port == GPIOA)		GPIO_port = 0;
+	else if (Port == GPIOB)     GPIO_port = 1;
+	else if (Port == GPIOC)     GPIO_port = 2;
+	else if (Port == GPIOD)     GPIO_port = 3;
+	else if (Port == GPIOE)     GPIO_port = 4;
+	else if (Port == GPIOH)     GPIO_port = 7;
+
+	RCC->AHB1ENR |= (1UL << GPIO_port);
 
 	GPIO_mode(pinName, mode);
 }

@@ -12,7 +12,6 @@ Description      : External Interrupt
 #include "ecGPIO2.h"
 #include "ecSysTick2.h"
 #include "ecEXTI2.h"
-//#include "ecEXTI2.h"
 
 
 void EXTI_init(PinName_t pinName, uint32_t trig_type,uint32_t priority){
@@ -81,14 +80,12 @@ void EXTI_disable(PinName_t pinName) {
 	EXTI->IMR &= ~(1UL << pin);     // masked (i.e., Interrupt disabled)
 }
 
-
-
 uint32_t is_pending_EXTI(PinName_t pinName) {
 	GPIO_TypeDef *Port;
 	unsigned int pin;
 	ecPinmap(pinName,&Port,&pin);
 
-	uint32_t EXTI_PRx =  (EXTI->PR>> pin) & 1UL;     // read PRx, EXTI pending bit.  Use  (REG>>k & 1) to read.
+	uint32_t EXTI_PRx =  (EXTI->PR>> pin) & 1UL;     // read PRx, EXTI pending bit.  
 	return  EXTI_PRx; 	// Return only 0 or 1
 }
 
@@ -100,5 +97,5 @@ void clear_pending_EXTI(PinName_t pinName){
 	ecPinmap(pinName, &Port, &pin);
 
 	// clear by writing 1 to the pending bit
-	EXTI->PR  |= (1 << pin);     
+	EXTI->PR = (1 << pin);     
 }

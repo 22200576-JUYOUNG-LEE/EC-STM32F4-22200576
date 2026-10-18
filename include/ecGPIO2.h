@@ -72,6 +72,25 @@ void FND_select_init        (PinName_t *selectFND);
 void FND_display            (uint8_t num);
 void FND_select             (uint8_t digit);
  
+
+
+// pratice 
+void GPIO_init_1      (PinName_t pinName, uint32_t mode);     
+void GPIO_mode_1      (PinName_t pinName, uint32_t mode);
+void GPIO_ospeed_1    (PinName_t pinName, uint32_t speed);
+void GPIO_otype_1     (PinName_t pinName, uint32_t type);
+void GPIO_pupd_1      (PinName_t pinName, uint32_t pupd);
+void GPIO_write_1     (PinName_t pinName, uint32_t Output);
+uint32_t  GPIO_read_1 (PinName_t pinName);
+
+// FND for JKIT board 
+void FND_display_init_1       (PinName_t *pinFND);
+void FND_select_init_1        (PinName_t *selectFND);
+void FND_display_1            (uint8_t num);
+void FND_select_1             (uint8_t digit);
+
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
