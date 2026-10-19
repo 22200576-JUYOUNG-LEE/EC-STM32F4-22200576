@@ -127,7 +127,7 @@ void Stepper_step(uint32_t steps, uint32_t direction, uint32_t mode){
 
 		// state = next state
 		if (mode == FULL){ 	
-			if (direction == DIR_CW) state += 1;		
+			if (direction == STEPPER_DIR_CW) state += 1;		
 			else state += -1;	
 		}
 	 												

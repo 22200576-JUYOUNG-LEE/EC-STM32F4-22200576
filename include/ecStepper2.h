@@ -18,10 +18,10 @@ Description      : Stepper Motor Library.
 #endif /* __cplusplus */
 
 // Stepper Mode
-#define HALF 0
-#define FULL 1	 
-#define DIR_CW 0
-#define DIR_CCW 1	  
+#define STEPPER_MODE_HALF 0
+#define STEPPER_MODE_FULL 1	 
+#define STEPPER_DIR_CW 0
+#define STEPPER_DIR_CCW 1	  
 
 // Stepper Motor Spec
 // 28BYJ-48 : 64 steps/rev x 1/32 gear = 2048 
@@ -52,6 +52,9 @@ void stepper_out(uint32_t state);
 
 // Stop Stepper Motor
 void stepper_stop(void);
+
+// Choose Stepper Direction 
+void stepper_dir(uint32_t direction);
 
 
 #ifdef __cplusplus

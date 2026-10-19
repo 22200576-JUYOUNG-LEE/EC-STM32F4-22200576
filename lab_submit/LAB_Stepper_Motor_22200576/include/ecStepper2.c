@@ -15,6 +15,7 @@ Description      : Stepper Motor Library.
 static PinName_t stepperPins[4];
 static volatile uint32_t _steps;
 static volatile uint32_t _mode;
+static volatile uint32_t _dir;
 static volatile uint32_t _step_delay = 100;		
 static const StateStepper_t *fsm;				// points at fsm_full or fsm_half (chosen in stepper_init)
 static volatile uint32_t state = 0;				// current FSM state
@@ -81,6 +82,7 @@ void stepper_step(uint32_t steps, uint32_t direction){
 	if(_mode == FULL) _steps = steps;
 	else _steps = 2 * steps;
 
+
 	// run for step size: 
 	for (uint32_t i = 0; i < _steps; i++){					
 		
@@ -118,6 +120,4 @@ void stepper_stop(void) {
 	GPIO_write(stepperPins[2], 0);
 	GPIO_write(stepperPins[3], 0);
 }
-
-
 

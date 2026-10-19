@@ -35,9 +35,9 @@ int main(void) {
 	// Inifinite Loop ----------------------------------------------------------
 	while(1){
 
-		stepper_step(steps, DIR_CCW);   // (Step : 2048, Direction : 0 or 1, Mode : FULL or HALF)
+		stepper_step(steps, STEPPER_DIR_CCW);   // (Step : 2048, Direction : 0 or 1, Mode : FULL or HALF)
 		delay_ms(2000);
-		stepper_step(steps, DIR_CW);  // (Step : 2048, Direction : 0 or 1, Mode : FULL or HALF)
+		stepper_step(steps, STEPPER_DIR_CW);  // (Step : 2048, Direction : 0 or 1, Mode : FULL or HALF)
 		delay_ms(2000);
 		
 	}

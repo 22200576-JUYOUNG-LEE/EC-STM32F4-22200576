@@ -11,7 +11,8 @@ Description      : Stepper motor P1.Rotate the stepper motor 5 revolutions with 
 #include "ecSTM32F4v2.h"
 
 // ( A, B,  AN,  BN)
-PinName_t pinStepper[4]    = {PB_10,PB_4,PB_5,PB_3};
+PinName_t pinStepper[4]         = {PB_10,PB_4,PB_5,PB_3};
+
 uint32_t motor_speed = 2;
 
 // Initialiization 
@@ -21,7 +22,7 @@ void setup(void){
 
 	EXTI_init(SW1_PIN, FALL, 10);
 
-	stepper_init(HALF, pinStepper); 				// Stepper GPIO pin initialization
+	stepper_init(STEPPER_MODE_FULL, pinStepper); 				// Stepper GPIO pin initialization
 	stepper_speed(motor_speed);                          		//  set stepper motor speed
 }
 
@@ -35,7 +36,7 @@ int main(void) {
 	// Inifinite Loop ----------------------------------------------------------
 	while(1){
 
-		stepper_step(steps, DIR_CW);   // (Step : 2048, Direction : 0 or 1, Mode : FULL or HALF)
+		stepper_step(steps, STEPPER_DIR_CW);   // (Step : 2048, Direction : 0 or 1, Mode : FULL or HALF)
 		delay_ms(2000);
 		// stepper_step(steps, DIR_CCW);  // (Step : 2048, Direction : 0 or 1, Mode : FULL or HALF)
 		// delay_ms(2000);

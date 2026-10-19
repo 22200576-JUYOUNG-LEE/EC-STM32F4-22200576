@@ -15,6 +15,7 @@ Description      : Stepper Motor Library.
 static PinName_t stepperPins[4];
 static volatile uint32_t _steps;
 static volatile uint32_t _mode;
+static volatile uint32_t _dir;
 static volatile uint32_t _step_delay = 100;		
 static const StateStepper_t *fsm;				// points at fsm_full or fsm_half (chosen in stepper_init)
 static volatile uint32_t state = 0;				// current FSM state
@@ -43,7 +44,7 @@ static const StateStepper_t fsm_Half[8] = {
 
 // Initialization of Stepper Motor
 void stepper_init(uint32_t mode, PinName_t *pinStepper){
-	if (mode == HALF) 
+	if (mode == STEPPER_MODE_HALF) 
 		fsm = fsm_Half;
 	else
 		fsm = fsm_Full;
@@ -64,7 +65,7 @@ void stepper_init(uint32_t mode, PinName_t *pinStepper){
 
 // Converts Motor [rpm] to step delay in [msec]
 void stepper_speed (uint32_t speedRPM){      // rpm
-	if(_mode == FULL) _step_delay = 60*1000/(STEP_PER_REV*speedRPM); 		//in [msec]	
+	if(_mode == STEPPER_MODE_FULL) _step_delay = 60*1000/(STEP_PER_REV*speedRPM); 		//in [msec]	
 	else _step_delay =  60*1000/(STEP_PER_REV*speedRPM) / 2; 				// delay of half
 	// [usec] can be used for a higher accuracy
 	// But needs delay_us() 
@@ -78,14 +79,18 @@ void stepper_step(uint32_t steps, uint32_t direction){
 	if (fsm == 0) return;
 	
 	// Change step size 
-	if(_mode == FULL) _steps = steps;
+	if(_mode == STEPPER_MODE_FULL) _steps = steps;
 	else _steps = 2 * steps;
+
+	// Choose direction 
+	_dir = direction;
+
 
 	// run for step size: 
 	for (uint32_t i = 0; i < _steps; i++){					
 		
 		// Next State
-		state = fsm[state].next[direction];
+		state = fsm[state].next[_dir];
 
 		// Output of Present State
 		stepper_out(state);
@@ -121,3 +126,10 @@ void stepper_stop(void) {
 
 
 
+
+// Change direction of stepper
+void stepper_dir(uint32_t direction){
+
+	_dir = direction;
+	
+}
