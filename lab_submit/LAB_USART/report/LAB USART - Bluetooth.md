@@ -66,7 +66,7 @@ Then, change their names as
 1. Fill in the blanks in the library files.&#x20;
 2. Then, run the test code in different baud rate to validate your code. &#x20;
 
-   \* Tera-Term Terminal:   (1) Baud 9600,  (2) Baud 57600
+   \* Tera-Term Terminal:   ==(1) Baud 9600,  (2) Baud 57600==
 3. You may do the exercise after you complete this Lab
 
 **ecUSART2.h**
@@ -181,7 +181,7 @@ int main(void) {
 * MCU1 to PC1
 * MCU2 to PC2
 
-4\. Connect MCU1 to MCU2 with **USART 1**
+==4\. Connect MCU1 to MCU2 with **USART 1**==
 
 * Connect RX/TX pins externally with jumper wires as
   * MCU1\_TX to MCU2\_RXD
@@ -190,18 +190,18 @@ int main(void) {
 5. Connect **GND pins** between MCU1-MCU2
 
 {% hint style="info" %}
-MUST connect the same GND pin between MCU1 and MCU2
+==MUST connect the same GND pin between MCU1 and MCU2==
 {% endhint %}
 
 6. Send a message from PC\_1 by typing keys on Teraterm.&#x20;
 
-> You have to press "Enter" to end the message.
+> ==You have to press "Enter" to end the message.==
 
 7. The received message by MCU\_2 should be displayed on PC\_2.
 8. Turn other MCU's LED(LD2) ON/OFF by :
 
-* Press key "**L**" to Turn OFF LED
-* Press key "**H**" to Turn ON LED
+* ==Press key "**L**" to Turn OFF LED==
+* ==Press key "**H**" to Turn ON LED==
 
 ### Configuration
 
@@ -219,10 +219,10 @@ Example codes for communicating between two MCUs
 **Example 1 :** RX/TX **one character** at a time
 
 * Receive (Interrupt), Send (Polling)
-* USART2:&#x20;
+* ==USART2:==&#x20;
   * Sending a character from PC\_keyboard to MCU
   * Sending a character from MCU to PC serial monitor (**Echo keyboard type**)
-* USART1:
+* ==USART1:==
   * Send and Receive a character from other MCU
 * To Display the received message on PC monitor
   * MCU\_2:USART1 -> MCU\_1:USART1 -> MCU\_1:USART2-> Serial monitor\_1

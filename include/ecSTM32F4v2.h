@@ -24,10 +24,11 @@ Description      : STM32 F411 Library
 #include "ecEXTI2.h"
 #include "ecSysTick2.h"
 #include "ecStepper2.h"
+#include "ecUART2.h"
 //#include "ecTIM2.h"
 //#include "ecPWM2.h"
 //#include "ecADC2.h"
-//#include "ecUART2.h"
+
 
 #define SW1_PIN                 PC_13
 #define LED_PIN                 PA_5

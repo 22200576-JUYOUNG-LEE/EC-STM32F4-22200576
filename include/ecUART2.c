@@ -242,7 +242,7 @@ void USART1_init(void){
   //    USARTDIV = f_APB1 / (16 x baud)
   //    USART_baud(USARTx, 9600);
   uint32_t baud=  9600;				// Default baud rate for USART2
-  float fCK      = (float)EC_SYSCLK / 2;		// APB1 : 84MHz PLL -> 42MHz
+  float fCK      = (float)EC_SYSCLK;		// APB1 : 84MHz PLL -> 42MHz
   float USARTDIV = fCK / 16 / baud;
   uint32_t MNT   = (uint32_t)USARTDIV;
   uint32_t FRC   = round((USARTDIV - MNT) * 16);

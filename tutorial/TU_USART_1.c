@@ -14,7 +14,7 @@ Description      : Tutorial - USART2 with the STUDENT library (ecUART2_student)
 #include "ecGPIO2.h"
 #include "ecRCC2.h"
 #include "ecSysTick2.h"
-#include "ecUART2_student.h"
+#include "ecUART2.h"
 
 uint8_t PC_string[] = "Hello Handong\r\n";
 uint8_t BT_string[20]={0};
