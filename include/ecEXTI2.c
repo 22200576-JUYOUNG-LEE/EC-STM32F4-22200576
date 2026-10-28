@@ -50,6 +50,7 @@ void EXTI_init(PinName_t pinName, uint32_t trig_type,uint32_t priority){
 	
 	// Enable EXTI, with Not-Masked Interrupt Request 
 	// Not-mask (==Enable) EXTIx
+	EXTI->PR  = 1UL << pin; 
  	EXTI->IMR |= 1UL << pin;
 	
 	

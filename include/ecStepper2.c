@@ -10,6 +10,7 @@ Description      : Stepper Motor Library.
 
 #include "ecStepper2.h"
 
+static volatile uint32_t _lastTick = 0;     // 마지막으로 스텝을 진행한 시각 [ms]
 
 // Stepper Motor variable
 static PinName_t stepperPins[4];
@@ -19,7 +20,7 @@ static volatile uint32_t _dir;
 static volatile uint32_t _step_delay = 100;		
 static const StateStepper_t *fsm;				// points at fsm_full or fsm_half (chosen in stepper_init)
 static volatile uint32_t state = 0;				// current FSM state
-
+static volatile uint8_t _paused = 0;
 
 
 // Output: A B A' B'
@@ -100,6 +101,7 @@ void stepper_step(uint32_t steps, uint32_t direction){
 	}
 }
 
+
 // Stepper Motor Output for given state
 void stepper_out(uint32_t state){
 	
@@ -122,14 +124,4 @@ void stepper_stop(void) {
 	GPIO_write(stepperPins[1], 0);
 	GPIO_write(stepperPins[2], 0);
 	GPIO_write(stepperPins[3], 0);
-}
-
-
-
-
-// Change direction of stepper
-void stepper_dir(uint32_t direction){
-
-	_dir = direction;
-	
 }

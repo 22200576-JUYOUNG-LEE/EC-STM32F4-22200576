@@ -56,6 +56,8 @@ void stepper_stop(void);
 // Choose Stepper Direction 
 void stepper_dir(uint32_t direction);
 
+void stepper_pause(void);
+void stepper_resume(void);
 
 #ifdef __cplusplus
 }

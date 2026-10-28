@@ -6,106 +6,35 @@
 
 **Author/Partner:** Juyoung Lee
 
+**Github:** [22200576-JUYOUNG-LEE/EC-STM32F4-22200576: Firmware for STM32F4, Embedded Controller, HGU](https://github.com/22200576-JUYOUNG-LEE/EC-STM32F4-22200576)
+
 **Demo Video:** [[EC 26-2] LAB(Stepper Motor)](https://www.youtube.com/watch?v=ZQgBbO_29qM)
 
-## Tutorial: Stepper Motor Driver (A4988)
+### Introduction
 
-A simple method to drive a stepper motor is using a motor driver that receives only a pulse and direction pin.
+In this lab, a 28BYJ-48 unipolar stepper motor was driven through a ULN2003 driver using a Moore finite state machine (FSM). A stepper motor library (`ecStepper2.h/.c`) was implemented that supports full-stepping and half-stepping, rotation direction control, and speed setting in RPM. The rotation time was measured to verify the speed calculation, the maximum and minimum operating speeds were investigated, and an external interrupt (EXTI) was used to stop the motor with a push button.
 
-* **A4988 motor driver** [A4988 spec sheet](https://www.makerguides.com/wp-content/uploads/2019/02/A4988-Datasheet.pdf)
-* **DRV8825**
-* Any motor shield based on A4988, DRV8825
+#### Requirement
+
+**Hardware**
+
+* MCU: NUCLEO-F411RE
+* Actuator: Stepper Motor 28BYJ-48 (5V, unipolar)
+* Motor Driver: ULN2003
+
+**Software**
+
+* PlatformIO, CMSIS, EC_HAL library
 
 
-![image-20260917172120106](https://3453146497-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F-MgmrEstOHxu62gXxq1t%2Fuploads%2Fgit-blob-ce6435dea519ae203b455437fc902ac56a32bbaa%2Fimage-20260917172120106.png?alt=media)
 
-The stepper motor for the tutorial can be any unipolar or bipolar (<24V)
+**Circuit Diagram for forward Project**
 
-* Stepping Motor (Bipolar 12V, [SM-42BYG011-25](https://cdn.sparkfun.com/assets/3/0/f/6/1/SM-42BYG011-25.pdf))
-* Stepping Motor (5V, KH4248 b90112:) 
 
-### Connection Diagram
-
-#### (1) Connection Diagram (A4988)
-
-1. Connect the motor driver and the stepper motor as follows.
-2. Supply 8V from a power supply to VMOT(#16 on Driver)
-
-| Functions                    | Motor          | Driver                                        | MCU-Arduino | MCU-STMf411 |
-| ---------------------------- | -------------- | --------------------------------------------- | ----------- | ----------- |
-| Step                         |                | #7                                            | D2          | PA\_10      |
-| Direction                    |                | #8                                            | D3          | PB\_3       |
-| VDD (MCU 5V)                 |                | #9                                            | 5V          | +5V         |
-| VDD\_GND (MCU GND)           |                | #10                                           | GND         | GND         |
-| Vmotor (PowerSupply)         |                | #16 to Power(8V), Capacitor 100uF (pin#15-16) |             |             |
-| Vmotor\_GND (PowerSupplyGnd) |                | #15 to Power(GND)                             |             |             |
-| Motor A, A'                  | A: RED, A':GRN | #12 to A, #11 to A'                           |             |             |
-| Motor B, B'                  | B: YEL, B':BLU | #13 to B, #14 to B'                           |             |             |
-| Others                       |                | #5(RST) to #6(SLP)                            |             |             |
-![[Pasted image 20261009220527.png]]
-<figure><img src="https://3453146497-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F-MgmrEstOHxu62gXxq1t%2Fuploads%2FC4S1vdDrkGyD3YgcymPP%2Fimage.png?alt=media&amp;token=e5f45a6d-9a9a-4863-b8c5-2de55c7564b8" alt=""><figcaption></figcaption></figure>
-
-#### (2) Connection Diagram (Motor Driver Shield based on A4988)
-
-Pin Connection
-
-MCU: &#x20;
-
-* DIR: D2(PA10),  STEP: D3(PB3),  ENABLE: D6(PB10)&#x20;
-
-Power Supply:  8\~12V
-
-Depends on the motor shield
-
-* SW4 to SW6 : ON  (Lowest Current RMS)
-* SW1 to SW3:  x1 micro-stepping
 
 <figure><img src="https://3453146497-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F-MgmrEstOHxu62gXxq1t%2Fuploads%2FOxLnSKYXa2ETjbewh1PO%2Fimage.png?alt=media&amp;token=42d81707-8166-4734-a783-5492a31e9e73" alt=""><figcaption></figcaption></figure>
 
-___
 
-<div style="page-break-after: always;"></div>
-
-
-
-### Tutorial Program
-
-```c
-#include "stm32f411xe.h"
-#include "ecRCC2.h"
-#include "ecGPIO2.h"
-#include "ecSysTick2.h"  
-
-#define MOTOR_DIR PB_3  
-#define MOTOR_PULSE PA_10
-
-void setup(void)
-{
-	RCC_PLL_init();                
-    SysTick_init(); 
-    GPIO_init(MOTOR_DIR, OUTPUT);      
-    GPIO_init(MOTOR_PULSE, OUTPUT);      
-}
-
-
-int main(void) {	    
-	setup();
-    // Set Dir high (CW)
-    GPIO_write(MOTOR_DIR, HIGH);     
-	while(1){
-          for(x = 0; x < 1000; x++) 
-		  {
-            GPIO_write(MOTOR_PULSE, HIGH);        
-        	delay_ms(10);
-	        GPIO_write(MOTOR_PULSE, LOW);        
-	        delay_ms(10);
-          }
-        delay_ms(1000);
-	}
-}
-
-
-```
 
 ___
 
@@ -126,7 +55,13 @@ ___
 
 #### Configuration
 
-![[Pasted image 20261009231659.png]]
+| Function                         | Port - Pin                                | Configuration                                            |
+| -------------------------------- | ----------------------------------------- | -------------------------------------------------------- |
+| **Stepper Motor (A, B, A', B')** | PB_10, PB_4, PB_5, PB_3 (ULN2003 IN1–IN4) | Digital Out, Push-Pull, No Pull-up-Pull-down, Fast Speed |
+| **Button (SW1)**                 | SW1_PIN (PC_13, user button)              | Digital In, EXTI15_10, Falling edge, Priority 10         |
+| **System Clock / Timer**         | PLL 84 MHz, SysTick                       | 1 ms tick (`delay_ms()`)                                 |
+
+![Configuration](./img/Pasted%20image%2020261009231659.png)
 
 #### Connection Diagram
 
@@ -169,43 +104,29 @@ ___
 
 ### Programming FSM
 
-**Preparation: ecStepper2.h**
+**Function Definitions: ecStepper2.h**
+
 The `ecStepper2.h` header file declares macros, data structures, and function prototypes required for the stepper motor library.
 
 - **Header Protection & Library Includes**
   - **`#ifndef __EC_STEPPER2_H` ~ `#endif`**: Include guard to prevent multiple inclusion errors during compilation.
-      
-    - **`ecSTM32F4v2.h`**: Includes register definitions, GPIO, EXTI, and SysTick utility functions for the STM32F411 MCU.
-    
+  - **`ecSTM32F4v2.h`**: Includes register definitions, GPIO, EXTI, and SysTick utility functions for the STM32F411 MCU.
 - **Macro Definitions (`#define`)**
-  
-    - **`HALF (0)` / `FULL (1)`**: Stepper motor driving mode selection macros (Half-stepping vs. Full-stepping).
-      
-    - **`DIR_CW (0)` / `DIR_CCW (1)`**: Rotation direction macros (Clockwise vs. Counter-Clockwise).
-      
-    - **`STEP_PER_REV (64*32)`**: Total steps per single revolution for the 28BYJ-48 motor (64 stride steps × 32 gear ratio = 2048 steps/rev).
-    
+  - **`HALF (0)` / `FULL (1)`**: Driving mode selection (half-stepping vs. full-stepping).
+  - **`DIR_CW (0)` / `DIR_CCW (1)`**: Rotation direction (clockwise vs. counter-clockwise).
+  - **`STEP_PER_REV (64*32)`**: Full steps per revolution of the 28BYJ-48 (64 stride steps × 32 gear ratio = 2048 steps/rev).
 - **Data Types & Structs**
-  
-    - **`StateNum` (Enum)**: FSM state indices (`S0` through `S7`, total 8 states).
-      
-    - **`StateStepper_t` (Struct)**: FSM state representation structure.
-      
-        - `next[2]`: Stores next state indices based on rotation direction (`DIR_CW`, `DIR_CCW`).
-          
-        - `out[4]`: Stores digital output signals (0 or 1) for the 4 motor coils (A, B, A', B').
-    
+  - **`StateNum` (Enum)**: FSM state indices (`S0` to `S7`, 8 states in total).
+  - **`StateStepper_t` (Struct)**: FSM state structure.
+    - `next[2]`: Next state index for each direction (`DIR_CW`, `DIR_CCW`).
+    - `out[4]`: Output signals (0 or 1) for the 4 motor coils (A, B, A', B').
 - **Function Prototypes**
-  
-    - **`stepper_init()`**: Initializes GPIO pins and driving mode.
-      
-    - **`stepper_speed()`**: Converts motor speed from RPM to step delay in milliseconds.
-      
-    - **`stepper_step()`**: Drives the motor for a specified number of steps and direction.
-      
-    - **`stepper_out()`**: Outputs digital signals to GPIO pins according to the current FSM state.
-      
-    - **`stepper_stop()`**: Cuts off power to all GPIO outputs to stop the motor.
+  - **`stepper_init()`**: Initializes GPIO pins and the driving mode.
+  - **`stepper_speed()`**: Converts motor speed in RPM to step delay in ms.
+  - **`stepper_step()`**: Drives the motor for a given number of steps and direction.
+  - **`stepper_out()`**: Writes the outputs of the current FSM state to the GPIO pins.
+  - **`stepper_stop()`**: Clears the remaining steps and turns off all coil outputs.
+
 ```c
 /*----------------------------------------------------------------\
 @ Embedded Controller by Young-Keun Kim - Handong Global University
@@ -227,10 +148,10 @@ Description      : Stepper Motor Library.
 #endif /* __cplusplus */
 
 // Stepper Mode
-#define HALF 0
-#define FULL 1	 
-#define DIR_CW 0
-#define DIR_CCW 1	  
+#define STEPPER_MODE_HALF 0
+#define STEPPER_MODE_FULL 1	 
+#define STEPPER_DIR_CW 0
+#define STEPPER_DIR_CCW 1	  
 
 // Stepper Motor Spec
 // 28BYJ-48 : 64 steps/rev x 1/32 gear = 2048 
@@ -262,12 +183,18 @@ void stepper_out(uint32_t state);
 // Stop Stepper Motor
 void stepper_stop(void);
 
+// Choose Stepper Direction 
+void stepper_dir(uint32_t direction);
+
+void stepper_pause(void);
+void stepper_resume(void);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
 #endif // __EC_STEPPER2_H
+
 
 
 ```
@@ -278,58 +205,51 @@ void stepper_stop(void);
 
 
 
-**Preparation: ecStepper2.c**
+**Function Definitions: ecStepper2.c**
 
-The `ecStepper2.c` file defines the FSM state tables and implements core control logic for driving the stepper motor.
+The `ecStepper2.c` file defines the FSM state tables and implements the control logic for driving the stepper motor.
 
 - **Static & Volatile Variables**
-  
-    - **`stepperPins[4]`**: Array holding GPIO pin assignments for motor drive lines.
-      
-    - **`_steps`**: Total step count to be executed.
-      
-    - **`_mode`**: Active driving mode (`FULL` or `HALF`).
-      
-    - **`_step_delay`**: Inter-step delay time in milliseconds.
-      
-    - **`*fsm`**: Pointer to the selected FSM state lookup table (`fsm_Full` or `fsm_Half`).
-      
-    - **`state`**: Current FSM state index.
-    
+
+  - **`stepperPins[4]`**: GPIO pins connected to the motor driver.
+  - **`_steps`**: Total number of steps to execute (`volatile`, because it is cleared by `stepper_stop()` inside the ISR).
+  - **`_mode`**: Active driving mode (`FULL` or `HALF`).
+  - **`_step_delay`**: Delay between steps in ms.
+  - **`*fsm`**: Pointer to the selected FSM table (`fsm_Full` or `fsm_Half`).
+  - **`state`**: Current FSM state index.
+
 - **FSM State Tables**
-  
-    - **`fsm_Full[4]`**: 4-State Moore FSM table for Full-stepping (2-phase excitation).
-      
-    - **`fsm_Half[8]`**: 8-State Moore FSM table for Half-stepping (1-2 phase excitation for higher resolution).
-    
+
+  - **`fsm_Full[4]`**: 4-state Moore FSM for full-stepping (2-phase excitation).
+  - **`fsm_Half[8]`**: 8-state Moore FSM for half-stepping (1-2 phase excitation, double resolution).
+
 - **Functions Description**
-  
-    - **`stepper_init(uint32_t mode, PinName_t *pinStepper)`**
-      
-        - Assigns the `fsm` pointer to `fsm_Full` or `fsm_Half` based on the input `mode`.
-          
-        - Configures the 4 designated GPIO pins as `OUTPUT`, `PUSH_PULL`, `NO_PUPD`, and `SPEED_FAST`.
-        
-    - **`stepper_speed(uint32_t speedRPM)`**
-      
-        - Calculates step delay (`_step_delay`, in ms) from target RPM:
-          
-            $$\text{\_step\_delay} = \frac{60 \times 1000}{\text{STEP\_PER\_REV} \times \text{speedRPM}}$$
-	    * In half-stepping mode, the step delay is halved.
-	    
-    - **`stepper_step(uint32_t steps, uint32_t direction)`**
-      
-        - Calculates total step count (`_steps`) according to active mode (`steps` for `FULL`, `2 * steps` for `HALF`).
-          
-        - Iterates through step count, transitioning to the next state based on `direction`, executing `stepper_out()`, and applying `delay_ms(_step_delay)`.
-        
-    - **`stepper_out(uint32_t state)`**
-      
-        - Reads values from `out[0..3]` of the current FSM state and writes digital signals to the 4 GPIO pins (A, B, A', B') via `GPIO_write()`.
-        
-    - **`stepper_stop(void)`**
-      
-        - Clears remaining steps (`_steps = 0`) and sets all 4 GPIO pins to `0` (LOW) to cut coil current and halt motor rotation.
+
+  - **`stepper_init(uint32_t mode, PinName_t *pinStepper)`**
+
+    - Sets `fsm` to `fsm_Full` or `fsm_Half` according to `mode`.
+    - Configures the 4 GPIO pins as `OUTPUT`, `PUSH_PULL`, `NO_PUPD`, and `SPEED_FAST`.
+
+  - **`stepper_speed(uint32_t speedRPM)`**
+
+    - Calculates the step delay from the target RPM:
+
+      $$\text{step delay [ms]} = \frac{60 \times 1000}{\text{STEP\_PER\_REV} \times \text{speedRPM}}$$
+
+    - In half-stepping mode, the number of steps per revolution is doubled, so the delay is calculated with `2 × STEP_PER_REV` in a single integer division.
+
+  - **`stepper_step(uint32_t steps, uint32_t direction)`**
+
+    - Sets `_steps` to `steps` (FULL) or `2 × steps` (HALF).
+    - For each step, moves to the next state according to `direction`, calls `stepper_out()`, and waits `delay_ms(_step_delay)`.
+
+  - **`stepper_out(uint32_t state)`**
+
+    - Writes `out[0..3]` of the current state to the 4 GPIO pins (A, B, A', B') with `GPIO_write()`.
+
+  - **`stepper_stop(void)`**
+
+    - Clears the remaining steps (`_steps = 0`) and sets all 4 pins LOW to cut the coil current.
 
 ```c
 /*----------------------------------------------------------------\
@@ -344,15 +264,17 @@ Description      : Stepper Motor Library.
 
 #include "ecStepper2.h"
 
+static volatile uint32_t _lastTick = 0;     // 마지막으로 스텝을 진행한 시각 [ms]
 
 // Stepper Motor variable
 static PinName_t stepperPins[4];
 static volatile uint32_t _steps;
 static volatile uint32_t _mode;
+static volatile uint32_t _dir;
 static volatile uint32_t _step_delay = 100;		
 static const StateStepper_t *fsm;				// points at fsm_full or fsm_half (chosen in stepper_init)
 static volatile uint32_t state = 0;				// current FSM state
-
+static volatile uint8_t _paused = 0;
 
 
 // Output: A B A' B'
@@ -377,7 +299,7 @@ static const StateStepper_t fsm_Half[8] = {
 
 // Initialization of Stepper Motor
 void stepper_init(uint32_t mode, PinName_t *pinStepper){
-	if (mode == HALF) 
+	if (mode == STEPPER_MODE_HALF) 
 		fsm = fsm_Half;
 	else
 		fsm = fsm_Full;
@@ -398,7 +320,7 @@ void stepper_init(uint32_t mode, PinName_t *pinStepper){
 
 // Converts Motor [rpm] to step delay in [msec]
 void stepper_speed (uint32_t speedRPM){      // rpm
-	if(_mode == FULL) _step_delay = 60*1000/(STEP_PER_REV*speedRPM); 		//in [msec]	
+	if(_mode == STEPPER_MODE_FULL) _step_delay = 60*1000/(STEP_PER_REV*speedRPM); 		//in [msec]	
 	else _step_delay =  60*1000/(STEP_PER_REV*speedRPM) / 2; 				// delay of half
 	// [usec] can be used for a higher accuracy
 	// But needs delay_us() 
@@ -412,14 +334,18 @@ void stepper_step(uint32_t steps, uint32_t direction){
 	if (fsm == 0) return;
 	
 	// Change step size 
-	if(_mode == FULL) _steps = steps;
+	if(_mode == STEPPER_MODE_FULL) _steps = steps;
 	else _steps = 2 * steps;
+
+	// Choose direction 
+	_dir = direction;
+
 
 	// run for step size: 
 	for (uint32_t i = 0; i < _steps; i++){					
 		
 		// Next State
-		state = fsm[state].next[direction];
+		state = fsm[state].next[_dir];
 
 		// Output of Present State
 		stepper_out(state);
@@ -428,6 +354,7 @@ void stepper_step(uint32_t steps, uint32_t direction){
 		delay_ms(_step_delay);
 	}
 }
+
 
 // Stepper Motor Output for given state
 void stepper_out(uint32_t state){
@@ -455,7 +382,6 @@ void stepper_stop(void) {
 
 
 
-
 ```
 ----
 
@@ -466,16 +392,16 @@ void stepper_stop(void) {
 
 #### Main Code
 
-The main program initializes the system clock, external interrupts (EXTI), and stepper motor parameters, executing continuous bi-directional rotation within the infinite loop.
+The main program initializes the system clock, SysTick, the external interrupt (EXTI), and the stepper motor, and then rotates the motor in both directions repeatedly.
 
 - **Global Variables**
-  
+
     - **`pinStepper[4] = {PB_10, PB_4, PB_5, PB_3}`**: Defines STM32 GPIO pins connected to the motor driver inputs (IN1–IN4).
       
-    - **`motor_speed = 29`**: Sets target motor rotation speed (29 RPM).
-    
+    - **`motor_speed = 2`**: Sets target motor rotation speed (2 RPM).
+
 - **Functions Description**
-  
+
     - **`setup(void)`**
       
         - **`RCC_PLL_init()`**: Configures main system clock to 84 MHz.
@@ -494,15 +420,15 @@ The main program initializes the system clock, external interrupts (EXTI), and s
           
         - Calculates step count for 1 revolution (`steps = STEP_PER_REV * 1`).
           
-        - Rotates counter-clockwise (`DIR_CCW`) for 1 revolution, delays 2 seconds (`delay_ms(2000)`), rotates clockwise (`DIR_CW`) for 1 revolution, and delays 2 seconds continuously.
+        - Rotates counter-clockwise (`STEPPER_DIR_CCW`) for 1 revolution, delays 2 seconds (`delay_ms(2000)`), rotates clockwise (`STEPPER_DIR_CW`) for 1 revolution, and delays 2 seconds continuously.
         
     - **`EXTI15_10_IRQHandler(void)` (Interrupt Handler)**
-      
-        - Interrupt Service Routine triggered asynchronously when the user button (SW1) is pressed.
+      - Interrupt Service Routine triggered asynchronously when the user button (SW1) is pressed.
           
         - Checks for pending interrupt using `is_pending_EXTI(SW1_PIN)` and calls `stepper_stop()` to immediately stop motor operation.
           
         - Clears pending interrupt flag via `clear_pending_EXTI(SW1_PIN)` to prevent infinite ISR re-entry.
+
 ```c
 /*----------------------------------------------------------------\
 @ Embedded Controller by Young-Keun Kim - Handong Global University
@@ -517,8 +443,9 @@ Description      : Stepper motor P1.Rotate the stepper motor 5 revolutions with 
 #include "ecSTM32F4v2.h"
 
 // ( A, B,  AN,  BN)
-PinName_t pinStepper[4]    = {PB_10,PB_4,PB_5,PB_3};
-uint32_t motor_speed = 29;
+PinName_t pinStepper[4]         = {PB_10,PB_4,PB_5,PB_3};
+
+uint32_t motor_speed = 2;
 
 // Initialiization 
 void setup(void){	
@@ -527,7 +454,7 @@ void setup(void){
 
 	EXTI_init(SW1_PIN, FALL, 10);
 
-	stepper_init(HALF, pinStepper); 				// Stepper GPIO pin initialization
+	stepper_init(STEPPER_MODE_FULL, pinStepper); 				// Stepper GPIO pin initialization
 	stepper_speed(motor_speed);                          		//  set stepper motor speed
 }
 
@@ -541,9 +468,9 @@ int main(void) {
 	// Inifinite Loop ----------------------------------------------------------
 	while(1){
 
-		stepper_step(steps, DIR_CCW);   // (Step : 2048, Direction : 0 or 1, Mode : FULL or HALF)
+		stepper_step(steps, STEPPER_DIR_CW);   // (Step : 2048, Direction : 0 or 1, Mode : FULL or HALF)
 		delay_ms(2000);
-		stepper_step(steps, DIR_CW);  // (Step : 2048, Direction : 0 or 1, Mode : FULL or HALF)
+		stepper_step(steps, STEPPER_DIR_CCW);  // (Step : 2048, Direction : 0 or 1, Mode : FULL or HALF)
 		delay_ms(2000);
 		
 	}
@@ -653,4 +580,8 @@ Half-stepping doubled the step resolution and significantly reduced mechanical v
 
 [1] STMicroelectronics, _STM32F411xC/E Reference Manual (RM0383)_, Rev 4, 2025. [Online]. Available: [STMicroelectronics RM0383](https://www.st.com/resource/en/reference_manual/rm0383-stm32f411xce-advanced-armbased-32bit-mcus-stmicroelectronics.pdf)
 
-[2] STMicroelectronics, "ULN2003: Seven Darlington Arrays Datasheet," [Online]. Available: [https://www.alldatasheet.co.kr/datasheet-pdf/pdf/25575/STMICROELECTRONICS/ULN2003.html](https://www.google.com/search?q=https://www.alldatasheet.co.kr/datasheet-pdf/pdf/25575/STMICROELECTRONICS/ULN2003.html). [Accessed: Oct. 12, 2026].
+[2] STMicroelectronics, "ULN2003: Seven Darlington Arrays Datasheet," [Online]. Available: [https://www.alldatasheet.co.kr/datasheet-pdf/pdf/25575/STMICROELECTRONICS/ULN2003.html](https://www.alldatasheet.co.kr/datasheet-pdf/pdf/25575/STMICROELECTRONICS/ULN2003.html). [Accessed: Oct. 12, 2026].
+
+[3] ULN2003 Stepper Motor Driver Module spec sheet. [Online]. Available: [https://www.electronicoscaldas.com/datasheet/ULN2003A-PCB.pdf](https://www.electronicoscaldas.com/datasheet/ULN2003A-PCB.pdf)
+
+[4] Allegro MicroSystems, "A4988 DMOS Microstepping Driver with Translator Datasheet." [Online]. Available: [https://www.makerguides.com/wp-content/uploads/2019/02/A4988-Datasheet.pdf](https://www.makerguides.com/wp-content/uploads/2019/02/A4988-Datasheet.pdf)

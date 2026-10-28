@@ -58,10 +58,6 @@ int _read(int file, char* data, int len)
 
 #endif
 
-
-/*----------------------------------------------------------------\
-        EXERCISE: Implement the following functions
-/----------------------------------------------------------------*/
 /*================ General Configuration ================*/
 void USART_init(USART_TypeDef* USARTx, PinName_t pin_GPIO_TX, PinName_t pin_GPIO_RX, uint32_t baud){
 //1. GPIO Pin for TX and RX
@@ -153,8 +149,8 @@ void USART_pins(USART_TypeDef* USARTx, PinName_t pin_GPIO_TX, PinName_t pin_GPIO
 	if (pinTX < 8) 	{ GPIO_TX->AFR[0] &= ~(0xFUL << (4*pinTX));     GPIO_TX->AFR[0] |= AF_num << (4*pinTX); }
 	else           	{ GPIO_TX->AFR[1] &= ~(0xFUL << (4*(pinTX-8))); GPIO_TX->AFR[1] |= AF_num << (4*(pinTX-8)); }
 	
-	if (pinRX < 8) 	{ GPIO_RX->AFR[0] &= ~(0xFULL << (4*pinRX));  	GPIO_RX->AFR[0] |= AF_num << (4*pinRX); }
-	else		   	{ GPIO_RX->AFR[1] &= ~(0xFULL << (4*pinRX-8));  GPIO_RX->AFR[1] |= AF_num << (4*pinRX-8); }
+	if (pinRX < 8) 	{ GPIO_RX->AFR[0] &= ~(0xFUL << (4*pinRX));  	GPIO_RX->AFR[0] |= AF_num << (4*pinRX); }
+	else		   	{ GPIO_RX->AFR[1] &= ~(0xFUL << (4*pinRX-8));  GPIO_RX->AFR[1] |= AF_num << (4*pinRX-8); }
 
 }
 
@@ -166,10 +162,6 @@ void USART2_baud(uint32_t baud){
 	USART_baud(USART2, baud);
 }
 
-
-/*----------------------------------------------------------------\
-        PROVIDED: DON'T MODIFY HERE
-/----------------------------------------------------------------*/
 
 /*================ Configuration for each USART ================*/
 void USART1_init(void){

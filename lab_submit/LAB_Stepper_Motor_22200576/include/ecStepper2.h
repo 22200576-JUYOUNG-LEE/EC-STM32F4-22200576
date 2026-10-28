@@ -18,8 +18,8 @@ Description      : Stepper Motor Library.
 #endif /* __cplusplus */
 
 // Stepper Mode
-#define HALF 0
-#define FULL 1	 
+#define STEPPER_MODE_HALF 0
+#define STEPPER_MODE_FULL 1	 
 #define STEPPER_DIR_CW 0
 #define STEPPER_DIR_CCW 1	  
 
@@ -53,7 +53,11 @@ void stepper_out(uint32_t state);
 // Stop Stepper Motor
 void stepper_stop(void);
 
+// Choose Stepper Direction 
+void stepper_dir(uint32_t direction);
 
+void stepper_pause(void);
+void stepper_resume(void);
 
 #ifdef __cplusplus
 }

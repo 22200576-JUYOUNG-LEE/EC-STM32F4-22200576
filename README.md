@@ -1182,3 +1182,377 @@ Performs default peripheral initializations for the JKIT evaluation board:
 ```
 static inline void MCU_JK_init(void);
 ```
+
+
+## 8 USART (`ecUART2.h` / `ecUART2.c`)
+
+### Header File (`ecUART2.h`)
+
+```c
+#include <stdio.h>
+#include <math.h>
+#include "stm32f411xe.h"
+#include "ecGPIO2.h"
+#include "ecRCC2.h"
+
+#define POL 0
+#define INT 1
+
+// Baud rate
+#define BAUD_9600     9600
+#define BAUD_19200    19200
+#define BAUD_38400    38400
+#define BAUD_57600    57600
+#define BAUD_115200   115200
+#define BAUD_921600   921600
+
+// General configuration
+void USART_init(USART_TypeDef* USARTx, PinName_t pin_GPIO_TX, PinName_t pin_GPIO_RX, uint32_t baud);
+void USART_baud(USART_TypeDef* USARTx, uint32_t baud);
+void USART_pins(USART_TypeDef* USARTx, PinName_t pin_GPIO_TX, PinName_t pin_GPIO_RX);
+void USART1_baud(uint32_t baud);
+void USART2_baud(uint32_t baud);
+
+// Default configuration for USART1, USART2 (9600 baud)
+void USART1_init(void);
+void USART2_init(void);
+
+// USART write & read
+void     USART1_write(uint8_t* buffer, uint32_t nBytes);
+void     USART2_write(uint8_t* buffer, uint32_t nBytes);
+uint8_t  USART1_read(void);
+uint8_t  USART2_read(void);
+
+// RX flag
+uint32_t is_USART1_RXNE(void);
+uint32_t is_USART2_RXNE(void);
+
+// Low-level
+void     USART_clock_enable(USART_TypeDef* USARTx);
+void     USART_write(USART_TypeDef* USARTx, uint8_t* buffer, uint32_t nBytes);
+uint8_t  USART_read(USART_TypeDef* USARTx);
+uint32_t is_USART_RXNE(USART_TypeDef* USARTx);
+void     USART_delay(uint32_t us);
+```
+
+### USART Pin Map
+
+| USART | TX (default / option) | RX (default / option) | AF | Bus (PLL 84 MHz) | IRQn |
+|---|---|---|---|---|---|
+| USART1 | `PA_9` / `PB_6` | `PA_10` / `PB_3` | AF7 | APB2 (84 MHz) | `USART1_IRQn` (37) |
+| USART2 | `PA_2` | `PA_3` | AF7 | APB1 (42 MHz) | `USART2_IRQn` (38) |
+| USART6 | `PA_11` / `PC_6` | `PA_12` / `PC_7` | AF8 | APB2 (84 MHz) | `USART6_IRQn` (71) |
+
+- USART2 (`PA_2`/`PA_3`) is connected to the ST-Link virtual COM port. `printf()` and `scanf()` are retargeted to USART2.
+- Frame format: **8 data bits, no parity, 1 stop bit (8N1)**, oversampling ×16.
+
+
+
+### 8.1 General Configuration
+
+#### `USART_init()`
+
+Initializes a USART with the given TX/RX pins and baud rate. It configures the GPIO pins (AF), enables the peripheral clock, sets the frame format to 8N1, sets the baud rate, enables TX/RX, and enables the RXNE interrupt in the NVIC (priority 1).
+
+```c
+void USART_init(USART_TypeDef* USARTx, PinName_t pin_GPIO_TX, PinName_t pin_GPIO_RX, uint32_t baud);
+```
+
+- **Parameters:**
+
+  - `USARTx`: USART peripheral — `USART1`, `USART2`, `USART6`
+  - `pin_GPIO_TX`: TX pin of type `PinName_t` (e.g., `PA_9`)
+  - `pin_GPIO_RX`: RX pin of type `PinName_t` (e.g., `PA_10`)
+  - `baud`: Baud rate (e.g., `BAUD_9600`, `BAUD_115200`)
+
+- **Note:** The RXNE interrupt is always enabled. The matching `USARTx_IRQHandler()` must be defined, or the MCU will hang in `Default_Handler` when data is received.
+
+- **Example Code:**
+
+  ```c
+  USART_init(USART2, PA_2, PA_3, BAUD_115200);   // PC (USB)
+  USART_init(USART1, PA_9, PA_10, BAUD_9600);    // Bluetooth module
+  ```
+
+#### `USART_baud()`
+
+Calculates `USARTDIV` from the bus clock and writes the mantissa and fraction to `BRR`. USART2 uses APB1 (`EC_SYSCLK / 2`), and USART1/USART6 use APB2 (`EC_SYSCLK`).
+
+```c
+void USART_baud(USART_TypeDef* USARTx, uint32_t baud);
+```
+
+- **Formula:**
+
+  - `USARTDIV = f_CK / (16 × baud)`
+  - `BRR[15:4]` = Mantissa (integer part), `BRR[3:0]` = Fraction (× 16, rounded)
+
+- **Parameters:**
+
+  - `USARTx`: `USART1`, `USART2`, `USART6`
+  - `baud`: Baud rate
+
+- **Note:** This function disables the USART (`UE = 0`) and does **not** re-enable it. `USART_init()` enables it afterwards. When called alone, set `USARTx->CR1 |= USART_CR1_UE;` after it.
+
+- **Example Code:**
+
+  ```c
+  USART_baud(USART1, BAUD_38400);
+  USART1->CR1 |= USART_CR1_UE;   // re-enable USART1
+  ```
+
+#### `USART_pins()`
+
+Configures the TX/RX pins as Alternate Function, Push-Pull, No Pull-up/Pull-down, High speed, and sets the AF number in `AFR` (AF7 for USART1/2, AF8 for USART6).
+
+```c
+void USART_pins(USART_TypeDef* USARTx, PinName_t pin_GPIO_TX, PinName_t pin_GPIO_RX);
+```
+
+- **Parameters:**
+
+  - `USARTx`: `USART1`, `USART2`, `USART6`
+  - `pin_GPIO_TX`, `pin_GPIO_RX`: TX/RX pins of type `PinName_t`
+
+- **Example Code:**
+
+  ```c
+  USART_pins(USART1, PA_9, PA_10);
+  ```
+
+#### `USART1_baud()` / `USART2_baud()`
+
+Wrapper functions of `USART_baud()` for USART1 and USART2.
+
+```c
+void USART1_baud(uint32_t baud);
+void USART2_baud(uint32_t baud);
+```
+
+- **Parameters:**
+
+  - `baud`: Baud rate
+
+- **Example Code:**
+
+  ```c
+  USART2_baud(BAUD_115200);
+  ```
+
+
+
+### 8.2 Default Configuration for Each USART
+
+#### `USART1_init()`
+
+Initializes USART1 with default settings: `PA_9` (TX), `PA_10` (RX), 9600 baud, 8N1, RXNE interrupt enabled.
+
+```c
+void USART1_init(void);
+```
+
+- **Example Code:**
+
+  ```c
+  USART1_init();   // Bluetooth module at 9600 baud
+  ```
+
+#### `USART2_init()`
+
+Initializes USART2 with default settings: `PA_2` (TX), `PA_3` (RX), 9600 baud, 8N1, RXNE interrupt enabled. USART2 is connected to the PC through the ST-Link USB.
+
+```c
+void USART2_init(void);
+```
+
+- **Example Code:**
+
+  ```c
+  USART2_init();
+  printf("Hello\r\n");   // printed on PC terminal (9600 baud)
+  ```
+
+
+
+### 8.3 Write & Read
+
+#### `USART1_write()` / `USART2_write()`
+
+Transmits `nBytes` from the buffer through USART1 or USART2 (blocking).
+
+```c
+void USART1_write(uint8_t* buffer, uint32_t nBytes);
+void USART2_write(uint8_t* buffer, uint32_t nBytes);
+```
+
+- **Parameters:**
+
+  - `buffer`: Pointer to the data to send
+  - `nBytes`: Number of bytes to send
+
+- **Example Code:**
+
+  ```c
+  uint8_t msg[] = "OK\r\n";
+  USART1_write(msg, 4);
+  
+  uint8_t c = 'A';
+  USART2_write(&c, 1);   // pass the address, not the value
+  ```
+
+#### `USART1_read()` / `USART2_read()`
+
+Waits until one byte is received (RXNE = 1) and returns it (blocking). Reading `DR` clears RXNE.
+
+```c
+uint8_t USART1_read(void);
+uint8_t USART2_read(void);
+```
+
+- **Return Value:** Received byte
+
+- **Example Code:**
+
+  ```c
+  uint8_t data = USART1_read();
+  ```
+
+#### `is_USART1_RXNE()` / `is_USART2_RXNE()`
+
+Checks if received data is ready in `DR` (non-blocking).
+
+```c
+uint32_t is_USART1_RXNE(void);
+uint32_t is_USART2_RXNE(void);
+```
+
+- **Return Value:** `1` if data is received, `0` otherwise
+
+- **Example Code:**
+
+  ```c
+  if (is_USART1_RXNE()) {
+      uint8_t data = USART1_read();
+  }
+  ```
+
+
+
+### 8.4 Low-Level Functions
+
+#### `USART_clock_enable()`
+
+Enables the peripheral clock in RCC: USART1/USART6 in `APB2ENR`, USART2 in `APB1ENR`.
+
+```c
+void USART_clock_enable(USART_TypeDef* USARTx);
+```
+
+#### `USART_write()`
+
+For each byte, waits until `TXE = 1` and writes it to `DR`. After the last byte, waits until `TC = 1` and clears TC.
+
+```c
+void USART_write(USART_TypeDef* USARTx, uint8_t* buffer, uint32_t nBytes);
+```
+
+#### `USART_read()`
+
+Waits until `RXNE = 1` and returns the lower 8 bits of `DR`.
+
+```c
+uint8_t USART_read(USART_TypeDef* USARTx);
+```
+
+#### `is_USART_RXNE()`
+
+Returns the RXNE flag of `SR` (`1` = data received).
+
+```c
+uint32_t is_USART_RXNE(USART_TypeDef* USARTx);
+```
+
+#### `USART_delay()`
+
+Busy-wait delay in microseconds (approximate). Used between bytes in `USART_write()`.
+
+```c
+void USART_delay(uint32_t us);
+```
+
+
+
+### 8.5 printf / scanf Retarget
+
+`printf()` and `scanf()` are redirected to **USART2** (PC terminal).
+
+- Keil (ARMCC): `fputc()` / `fgetc()`
+- GCC: `_write()` / `_read()`
+
+```c
+USART2_init();                  // or USART_init(USART2, PA_2, PA_3, BAUD_9600);
+printf("MCU Initialized\r\n");
+```
+
+- **Note:** Do not use `scanf()` / `USART2_read()` in `main` while `USART2_IRQHandler()` also reads `DR`. The ISR takes the byte first, and `main` waits forever.
+
+
+
+#### Complete Example Code (Bluetooth → Stepper Motor, PC Monitor)
+
+This example receives commands from a Bluetooth module on USART1 and controls the stepper motor direction. Received characters are printed on the PC terminal through USART2.
+
+```c
+#include "ecSTM32F4v2.h"
+
+PinName_t pinStepper[4] = {PB_10, PB_4, PB_5, PB_3};
+
+volatile uint8_t BT_data = 0;
+volatile uint8_t BT_flag = 0;
+
+void setup(void) {
+    RCC_PLL_init();                      // 84 MHz
+    SysTick_init();
+
+    stepper_init(STEPPER_MODE_FULL, pinStepper);
+    stepper_speed(5);
+
+    USART_init(USART2, PA_2, PA_3, BAUD_9600);    // PC
+    USART_init(USART1, PA_9, PA_10, BAUD_9600);   // Bluetooth
+}
+
+int main(void) {
+    setup();
+    uint32_t steps = 2 * STEP_PER_REV;
+    printf("MCU Initialized\r\n");
+
+    while (1) {
+        if (BT_flag) {                   // print in main, not in ISR
+            BT_flag = 0;
+            printf("RX: %c\r\n", BT_data);
+        }
+        stepper_step(steps, STEPPER_DIR_CCW);
+        delay_ms(2000);
+    }
+}
+
+// Bluetooth command: 'J' = CCW, 'K' = CW, 'P' = stop
+void USART1_IRQHandler(void) {
+    if (is_USART1_RXNE()) {
+        BT_data = USART1_read();         // reading DR clears RXNE
+        BT_flag = 1;
+
+        if      (BT_data == 'J') stepper_dir(STEPPER_DIR_CCW);
+        else if (BT_data == 'K') stepper_dir(STEPPER_DIR_CW);
+        else if (BT_data == 'P') stepper_stop();
+    }
+}
+
+// PC echo
+void USART2_IRQHandler(void) {
+    if (is_USART2_RXNE()) {
+        uint8_t c = USART2_read();
+        USART2_write(&c, 1);
+    }
+}
+```

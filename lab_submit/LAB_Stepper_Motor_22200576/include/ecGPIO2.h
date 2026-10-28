@@ -15,34 +15,36 @@ Description      : GPIO Library. Distributed to Students for LAB_GPIO
 #include "ecRCC2.h"
 #include "ecPinNames.h"
 
+// MODER
 #define INPUT       0x00
 #define OUTPUT      0x01
 #define AF          0x02
 #define ANALOG      0x03
 
+// IDR & ODR
 #define HIGH        0x01
 #define LOW         0x00
 
+// OSPEED
 typedef enum {
     SPEED_LOW         = 0,
     SPEED_MEDIUM      = 1,
     SPEED_FAST        = 2,
     SPEED_HIGH        = 3,
-
 }OSPEED;
 
+// OTYPE
 typedef enum {
     PUSH_PULL         = 0,
     OPEN_DRAIN        = 1,
-
 } OTYPE;
 
+// PUPD
 typedef enum {
     NO_PUPD           = 0,
     PULL_UP           = 1,
     PULL_DOWN         = 2,
     RESERVED          = 3,
-    
 }PUPD;
 
 
@@ -58,18 +60,37 @@ void GPIO_pupd      (PinName_t pinName, uint32_t pupd);
 void GPIO_write     (PinName_t pinName, uint32_t Output);
 uint32_t  GPIO_read (PinName_t pinName);
 
-// ARDUINO Syntax  (Optional)
-void        pinMode            (PinName_t pin, uint32_t mode);
-void        digitalWrite       (PinName_t pin, uint32_t value);
-uint32_t    digitalRead   (PinName_t pin);
+// ARDUINO Syntax
+void        pinMode             (PinName_t pin, uint32_t mode);
+void        digitalWrite        (PinName_t pin, uint32_t value);
+uint32_t    digitalRead         (PinName_t pin);
 
 // FND for JKIT board 
 extern int numberFND[12][8];
-void FND_display_init(PinName_t *pinFND);
-void FND_select_init(PinName_t *selectFND);
-void FND_display(uint8_t num);
-void FND_select(uint8_t digit);
+void FND_display_init       (PinName_t *pinFND);
+void FND_select_init        (PinName_t *selectFND);
+void FND_display            (uint8_t num);
+void FND_select             (uint8_t digit);
  
+
+
+// pratice 
+void GPIO_init_1      (PinName_t pinName, uint32_t mode);     
+void GPIO_mode_1      (PinName_t pinName, uint32_t mode);
+void GPIO_ospeed_1    (PinName_t pinName, uint32_t speed);
+void GPIO_otype_1     (PinName_t pinName, uint32_t type);
+void GPIO_pupd_1      (PinName_t pinName, uint32_t pupd);
+void GPIO_write_1     (PinName_t pinName, uint32_t Output);
+uint32_t  GPIO_read_1 (PinName_t pinName);
+
+// FND for JKIT board 
+void FND_display_init_1       (PinName_t *pinFND);
+void FND_select_init_1        (PinName_t *selectFND);
+void FND_display_1            (uint8_t num);
+void FND_select_1             (uint8_t digit);
+
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

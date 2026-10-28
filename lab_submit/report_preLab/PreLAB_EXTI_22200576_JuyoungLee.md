@@ -113,13 +113,13 @@ GPIO_pupd(PA_4, PULL_UP);
 * Connect PA\_4(push-button) to EXTI4 line (given code)
 
   ```c
-
+  
   	// Button: PA_4 -> EXTICR2(EXTI4)
   	// Pin 4~7: EXTICR2 // EXTICR[1]
-
+  
   	SYSCFG->EXTICR[1] &= ~(0xFUL << 4);
   	SYSCFG->EXTICR[1] |=  0UL<<4;
-
+  
   	// These are the same as
   	SYSCFG->EXTICR[1] &= ~SYSCFG_EXTICR2_EXTI4;  
   	SYSCFG->EXTICR[1] |= SYSCFG_EXTICR2_EXTI4_PA;
@@ -135,7 +135,7 @@ GPIO_pupd(PA_4, PULL_UP);
   	// Pin 4~7: EXTICR2 // EXTICR[1]
   	// Pin 8~11: EXTICR3 // EXTICR[2]
   	// Pin 12~15: EXTICR4 // EXTICR[3]
-
+  
   	uint32_t EXTICR_port=0;
   	if		(Port == GPIOA) EXTICR_port = 0;
   	else if	(Port == GPIOB) EXTICR_port = 1;
