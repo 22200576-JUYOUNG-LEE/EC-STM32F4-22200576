@@ -14,7 +14,7 @@ int main(void){
 
     while(1){
 
-        button_state = GPIO_read(SW1_PIN);
+        button_state = GPIO_read(BUTTON_PIN);
 
         if(button_state == HIGH){
             GPIO_write(LED_PIN, LOW);   

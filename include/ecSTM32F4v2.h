@@ -26,11 +26,12 @@ Description      : STM32 F411 Library
 #include "ecSysTick2.h"
 #include "ecStepper2.h"
 #include "ecUART2.h"
-//#include "ecTIM2.h"
-//#include "ecPWM2.h"
+#include "ecTIM2.h"
+#include "ecPWM2.h"
+#include "ecICAP2.h"
 //#include "ecADC2.h"
 
-#define SW1_PIN                 PC_13
+#define BUTTON_PIN                 PC_13
 #define LED_PIN                 PA_5
 
 #define SW2_PIN_JK              PA_4
@@ -104,10 +105,10 @@ static inline void MCU_init(void){
     USART2_init();
     
     // Button PC13
-    GPIO_init(SW1_PIN, INPUT);
-    GPIO_pupd(SW1_PIN, PULL_DOWN);  
+    GPIO_init(BUTTON_PIN, INPUT);
+    GPIO_pupd(BUTTON_PIN, PULL_UP);  
       
-    EXTI_init(SW1_PIN, FALL, 10);
+    EXTI_init(BUTTON_PIN, FALL, 10);
     
     // LED PA5
     GPIO_init   (LED_PIN, OUTPUT);   

@@ -20,7 +20,7 @@ void setup(void){
 	RCC_PLL_init();                                 // System Clock = 84MHz
 	SysTick_init();                                 // Systick init
 
-	EXTI_init(SW1_PIN, FALL, 10);
+	EXTI_init(BUTTON_PIN, FALL, 10);
 
 	stepper_init(STEPPER_MODE_FULL, pinStepper); 				// Stepper GPIO pin initialization
 	stepper_speed(motor_speed);                          		//  set stepper motor speed
@@ -48,9 +48,9 @@ int main(void) {
 
 
 void EXTI15_10_IRQHandler(void) {  
-	if (is_pending_EXTI(SW1_PIN)) {
+	if (is_pending_EXTI(BUTTON_PIN)) {
 		stepper_stop();
 
-        clear_pending_EXTI(SW1_PIN); // cleared by writing '1'
+        clear_pending_EXTI(BUTTON_PIN); // cleared by writing '1'
 	}
 }

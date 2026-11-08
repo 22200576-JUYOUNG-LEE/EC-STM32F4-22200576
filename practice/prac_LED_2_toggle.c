@@ -21,7 +21,7 @@ int main(void){
     while(1){
 
         // 1. read date 
-        currButtonState = GPIO_read(SW1_PIN);
+        currButtonState = GPIO_read(BUTTON_PIN);
 
 
         // 2. process data

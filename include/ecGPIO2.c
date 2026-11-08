@@ -166,3 +166,13 @@ void FND_select(uint8_t digit){
 		else GPIO_write(_fndSel[i], LOW);
 	}
 }
+
+void led_toggle(PinName_t pinName){
+
+	GPIO_TypeDef *Port;
+	unsigned int pin;	
+	ecPinmap(pinName, &Port, &pin);
+
+	Port->ODR ^= (1 << pin);
+
+}

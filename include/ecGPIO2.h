@@ -90,6 +90,8 @@ void FND_display_1            (uint8_t num);
 void FND_select_1             (uint8_t digit);
 
 
+// LED Toggling 
+void led_toggle(PinName_t pinName);
 
 #ifdef __cplusplus
 }

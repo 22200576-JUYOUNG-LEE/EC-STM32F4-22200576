@@ -18,12 +18,12 @@ int main(void){
 
 // EXTI PC_13 button
 void EXTI15_10_IRQHandler(void){
-    if(is_pending_EXTI(SW1_PIN)){
+    if(is_pending_EXTI(BUTTON_PIN)){
 
         state ^= 1UL;
         GPIO_write(LED_PIN, state);
 
-        clear_pending_EXTI(SW1_PIN);
+        clear_pending_EXTI(BUTTON_PIN);
     }
 }
 

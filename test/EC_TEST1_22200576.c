@@ -122,28 +122,24 @@ int main(void){
 	while(1){
 
 
-		/////////////////////////////////////////////////////
-		motor_pause = !(GPIO_read(PHOTO_PIN_JK))
+		// /////////////////////////////////////////////////////
+		// motor_pause = !(GPIO_read(PHOTO_PIN_JK))
 
-		if (motor_pause){
-			led_blink = 1;
-			sw_pressed = 0;
-			stepper_stop();
+		// if (motor_pause){
+		// 	led_blink = 1;
+		// 	sw_pressed = 0;
+		// 	stepper_stop();
 
-		}else{
-			led_blink = 0; GPIO_write(LED_PIN_JK);
-			if(sw_pressed){
-				nextState();
-				sw_pressed= 0;
-			}
-			stateOutput();
-
-
-		}
+		// }else{
+		// 	led_blink = 0; GPIO_write(LED_PIN_JK);
+		// 	if(sw_pressed){
+		// 		nextState();
+		// 		sw_pressed= 0;
+		// 	}
+		// 	stateOutput();
 
 
-
-
+		// }
 
 		/////////////////////////////////////////////////////
 
@@ -208,28 +204,28 @@ int main(void){
 	}
 }
 
-void nextState(void){
-	if(sw_input ==  SW_UP){
-		if(motor_mode < MODE_MAX) motor_mode ++;
+// void nextState(void){
+// 	if(sw_input ==  SW_UP){
+// 		if(motor_mode < MODE_MAX) motor_mode ++;
 
-	}
-	else if (sw_input == SW_DOWN){
-		if(motor_mode > MODE_MIN) 
-	}
-}
+// 	}
+// 	else if (sw_input == SW_DOWN){
+// 		if(motor_mode > MODE_MIN) 
+// 	}
+// }
 
-vodi stateOupPut(void){
-	uint32_t rpm = 0;
+// vodi stateOupPut(void){
+// 	uint32_t rpm = 0;
 
-	if(motor_mode == S0)  rpm = 0;
-	sles if (motor_mode == S1) rpm = 2;
-	else if (motor_mode == S2) rpm = 6;
-	else if (modtor_mode == S3) rpm = 10;
+// 	if(motor_mode == S0)  rpm = 0;
+// 	sles if (motor_mode == S1) rpm = 2;
+// 	else if (motor_mode == S2) rpm = 6;
+// 	else if (modtor_mode == S3) rpm = 10;
 
 
 	
 
-}
+// }
 
 
 //==================================================================
@@ -238,23 +234,23 @@ vodi stateOupPut(void){
 
 
 
-// =============================================================//
+// // =============================================================//
 
-void EXTI2_IRQHandler(void){
-	if(is_pending_EXTI(SW1_PIN_JK)){
-		sw_pressed = 1;
-		sw_input = SW_UP;
-		clear_pending_EXTI(SW1_PIN_JK);
-	}
-}
-void EXTI1_IRQHandler(void){
-	if(is_pending_EXTI(SW1_PIN_JK)){
-		sw_pressed = 1;
-		sw_input = SW_DOWN;
-		clear_pending_EXTI(SW1_PIN_JK);
-	}
-}
-// ============================================================= //
+// void EXTI2_IRQHandler(void){
+// 	if(is_pending_EXTI(SW1_PIN_JK)){
+// 		sw_pressed = 1;
+// 		sw_input = SW_UP;
+// 		clear_pending_EXTI(SW1_PIN_JK);
+// 	}
+// }
+// void EXTI1_IRQHandler(void){
+// 	if(is_pending_EXTI(SW1_PIN_JK)){
+// 		sw_pressed = 1;
+// 		sw_input = SW_DOWN;
+// 		clear_pending_EXTI(SW1_PIN_JK);
+// 	}
+// }
+// // ============================================================= //
 
 // sw2
 void EXTI4_IRQHandler(void) {

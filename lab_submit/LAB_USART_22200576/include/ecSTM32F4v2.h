@@ -30,7 +30,7 @@ Description      : STM32 F411 Library
 //#include "ecADC2.h"
 
 
-#define SW1_PIN                 PC_13
+#define BUTTON_PIN                 PC_13
 #define LED_PIN                 PA_5
 
 #define SW2_PIN_JK              PA_4

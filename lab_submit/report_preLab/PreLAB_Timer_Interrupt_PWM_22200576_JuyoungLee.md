@@ -1,5 +1,9 @@
 # PreLAB: Timer Interrupt & PWM
 
+**Date:** 2026-11-2
+
+**Author/Partner:** Juyoung Lee (22200576)
+
 ## Introduction
 
 In this prelab, you will learn how to set up MCU Timers for Timer Interrupt and PWM output.
@@ -53,7 +57,6 @@ List of TIMx registers for Timer Interrupt
 {% code expandable="true" %}
 
 ```c
-// Search for [YOUR CODE GOES HERE !!!!]  and fill in the code.
 // Exercises are in these functions.
 void TIM_init(TIM_TypeDef* TIMx, uint32_t msec); 
 void TIM_init_us(TIM_TypeDef* TIMx, uint32_t usec); 
@@ -68,15 +71,9 @@ void TIM_period_us(TIM_TypeDef* TIMx, uint32_t usec);
 
 ```c
 ////////////////////////////////////////////////////////////////
-/*											EXERCISE                             */
+/* Timer Counter Initialization                              */
 ////////////////////////////////////////////////////////////////
-/*
-// Search for [YOUR CODE GOES HERE !!!!]  and fill in the code.
-// Exercises are in these functions.
-void TIM_init(TIM_TypeDef* TIMx, uint32_t msec); 
-void TIM_init_us(TIM_TypeDef* TIMx, uint32_t usec); 
-void TIM_period_us(TIM_TypeDef* TIMx, uint32_t usec);
-*/
+
 
 // Timer Counter Initialization
 // Default : f_cnt =  10kHz, msec= 1 to 6,553 msec 
@@ -85,15 +82,14 @@ void TIM_init(TIM_TypeDef* TIMx, uint32_t msec){
 	TIM_clock_enable(TIMx);
 
 // 2. Set CNT period
-	TIM_period_ms(TIMx, msec); 			
+	TIM_period(TIMx, msec); 			
 
 // 3. COUNTER Direction
 	// Up-Counter	
-	// TIMx->CR1 _________________;	
-	// [YOUR CODE GOES HERE !!!!]
+	TIMx->CR1 &= ~TIM_CR1_DIR;	
 	
-	// Down-Counter
-	//TIMx->CR1 |= TIM_CR1_DIR;
+	// // Down-Counter
+	// TIMx->CR1 |= TIM_CR1_DIR;
 
 // 4. Enable Timer Counter
 	TIMx->CR1 |= TIM_CR1_CEN;		
@@ -104,16 +100,38 @@ void TIM_init(TIM_TypeDef* TIMx, uint32_t msec){
 // Default : f_cnt =  1 MHz, usec= 1 to 65,530 usec
 void TIM_init_us(TIM_TypeDef* TIMx, uint32_t usec){ 
 // 1. Enable Timer CLOCK
-	// [YOUR CODE GOES HERE !!!!]
+	TIM_clock_enable(TIMx);
 
 // 2. Set CNT period
 	TIM_period_us(TIMx, usec); 
 
 // 3. CNT Direction
-	// [YOUR CODE GOES HERE !!!!]	
+	// Up-Counter	
+	TIMx->CR1 &= ~TIM_CR1_DIR;	
+	
+	// Down-Counter
+	TIMx->CR1 |= TIM_CR1_DIR;
 
 // 4. Enable Timer Counter
-	// [YOUR CODE GOES HERE !!!!]
+	TIMx->CR1 |= TIM_CR1_CEN;
+}
+
+
+// Limits    : 16-bit ARR -> f_cnt =  10kHz, msec= 1 to 6,553 msec (ARR < 0xFFFF)
+void TIM_period(TIM_TypeDef* TIMx, uint32_t msec){
+
+	uint32_t Sys_CLK = EC_SYSCLK;					// 84MHz (PLL) or 16MHz (HSI)
+
+	// Counter Frequency (f_cnt) 
+	uint32_t f_cnt   =  10000UL;					// 16-bit CNT: f_cnt=10kHz (default)
+	
+	// Prescaler Value
+	uint32_t PSCval = Sys_CLK / f_cnt;				// 84MHz -> 10 kHz (PSC=8400)
+	TIMx->PSC = PSCval - 1;
+
+	// Reload Value (ARR) for msec unit
+	uint32_t ARRval = (f_cnt / 1000UL) * msec;		// Reload values needed for msec 	
+	TIMx->ARR = ARRval - 1;
 }
 
 
@@ -121,18 +139,17 @@ void TIM_init_us(TIM_TypeDef* TIMx, uint32_t usec){
 void TIM_period_us(TIM_TypeDef* TIMx, uint32_t usec){
 
 	uint32_t Sys_CLK = EC_SYSCLK;					// 84MHz (PLL) or 16MHz (HSI)
-	uint32_t ARRval=0;
 
 	// Counter Frequency (f_cnt) 
 	uint32_t f_cnt   =  1000000UL;					// 16-bit CNT: f_cnt=1MHz (default)
 	
 	// Prescaler Value
 	uint32_t PSCval = Sys_CLK / f_cnt;				// 84MHz -> 1 MHz (PSC=84)
-	// TIMx->PSC = _______________;					
+	TIMx->PSC = PSCval - 1;					
 	// [YOUR CODE GOES HERE !!!!]
 
 	// Reload Value (ARR) for msec unit
-	// uint32_t ARRval = ___________________;			
+	uint32_t ARRval = (f_cnt / 1000000UL) * usec;			
 	// [YOUR CODE GOES HERE !!!!]	
 	TIMx->ARR = ARRval - 1;
 }
@@ -340,6 +357,7 @@ void PWM_duty(PinName_t pinName, float duty);
 /* 		        EXERCISE					     */
 ///////////////////////////////////////////////////
 
+
 // Internal Helper function: for PWM Initialization
 void PWM_init_config(PinName_t pinName, uint32_t usec){
 // 0. Match TIMx from given Port_y and Pin_x
@@ -360,15 +378,16 @@ void PWM_init_config(PinName_t pinName, uint32_t usec){
 	uint32_t afNum    = 0;
 
 	//  AF1 for TIM1,TIM2     AF2 for TIM3,TIM4
-	if((TIMx == TIM1)||(TIMx == TIM2))		afNum = 1;	// AF1
-	else if(TIMx== TIM3 || TIMx == TIM4)	afNum = 2;	// AF2
+	if((TIMx == TIM1)||(TIMx == TIM2))						afNum = 1;	// AF1
+	else if(TIMx== TIM3 || TIMx == TIM4)					afNum = 2;	// AF2
+	else if(TIMx == TIM9 || TIMx == TIM10 || TIMx == TIM11) afNum = 3;  // AF3
 	// You can add more  for TIM5 to TIM11, if necessary [YOUR CODE GOES HERE!!]		
 
 
 	// Set AFR register for the pin
 	port->AFR[afrIdx] &= ~(0xFUL << afrShift);	// 4 bits per pin	
-	// port->AFR[afrIdx] ____________________  ; 
-	// YOUR CODE GOES HERE!!]	
+	port->AFR[afrIdx] |= (afNum << afrShift)  ; 
+
 
 
 // 3. Initialize Timer : select CLK_CNT according to PWM period 
@@ -381,7 +400,9 @@ void PWM_init_config(PinName_t pinName, uint32_t usec){
 	else {
 		uint32_t msec = usec / 1000;
 		if(msec > 6553) msec = 6553;			// 16-bit ARR has limit of 6.5sec
-		// [YOUR CODE GOES HERE!!]				// 65 < msec <65,536 msec	-> TIM_init() 	
+												// 65 < msec <65,536 msec	-> TIM_init() 
+		TIM_init(TIMx, msec);	
+	}
 
 // 4. Configure Timer Output mode as PWM
 	// Default: PWM Mode 1, active high, duty ratio = 50%
@@ -410,18 +431,19 @@ void PWM_duty(PinName_t pinName, float duty){
 	PWM_pinmap(pinName, &TIMx, &chN);
 
 // 1. Check the duty ratio range from 0.0 to 1.0
-	// [YOUR CODE GOES HERE!!]		// if duty < 0.0f  -> duty = 0.0f;
-	// [YOUR CODE GOES HERE!!]		// if duty > 1.0f  -> duty = 1.0f;
+	if(duty < 0.0f) duty = 0.0f;
+	else if (duty > 1.0f) duty = 1.0f;
 
 // 2. Duty ratio -> CCR counts.  Assume PWM mode 1 :
-	// uint32_t CCvalue = ____________________;	// (ARR+1) * duty
-	// [YOUR CODE GOES HERE!!]
+	uint32_t CCvalue = (uint32_t)((TIMx->ARR + 1) * duty);	// (ARR+1) * duty
+
+
 	
 	if(chN == 1)      { TIMx->CCR1 = CCvalue; }	//set channel
 	else if(chN == 2) { TIMx->CCR2 = CCvalue; }
-	// REPEAT for CHn= 3, 4
-	// [YOUR CODE GOES HERE!!]
-	// [YOUR CODE GOES HERE!!]
+	else if(chN == 3) { TIMx->CCR3 = CCvalue; }
+	else if(chN == 4) { TIMx->CCR4 = CCvalue; }
+
 
 }
 
