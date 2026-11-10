@@ -1,11 +1,11 @@
 /*----------------------------------------------------------------\
 @ Embedded Controller by Young-Keun Kim - Handong Global University
-Author           : [ YOUR NAME GOES HERE !!!!!]
+Author           : Juyoung Lee
 Created          : 10-16-2026
-Modified         : 00-00-2026 [WRITE THE DATE!!!!]
+Modified         : 11-10-2026 
 Language/ver     : C in VS Code
 
-Description      : Tutorial - Timer Input Capture example 2
+Description      : LAB - Timer Input Capture Ultrasonic Distance Sensor (HC-SR04)
 
                 Measures the signal with ICAP of  PB_6 (TIM4_CH1).                   
                     IC1 = rising edge, IC2 = falling edge   (TI1 -> IC1, IC2)
@@ -28,11 +28,11 @@ uint32_t pwm_pulsewidth_us = 10;
 uint32_t uTick=10;
 uint32_t timer_arr  = 65536;    // ticks per counter wrap (ARR+1)
 
-volatile uint32_t ovf_cnt       = 0;      //counts overflows
-volatile uint32_t cap_prev      = 0;   // CCR of the previous rising edge
-volatile uint32_t cap_curr      = 0;  // CCR of the current rising edge
-volatile uint32_t counts        = 0;       // [pulses]
-volatile float timeInterval     = 0;    // [usec]
+volatile uint32_t ovf_cnt       = 0;        //counts overflows
+volatile uint32_t cap_prev      = 0;        // CCR of the previous rising edge
+volatile uint32_t cap_curr      = 0;        // CCR of the current rising edge
+volatile uint32_t counts        = 0;        // [pulses]
+volatile float timeInterval     = 0;        // [usec]
 volatile uint8_t  _started      = 0;   
 volatile float distance         = 0;
 
@@ -58,7 +58,7 @@ void setup(void){
 
 int main(void){
     setup();
-    printf("TU_TIM_ICAP_E2 : jumper PA_6 -> PB_6, pwm period = %lu [msec], pwm pulsewidth = %lu usec\r\n", pwm_period_ms, pwm_pulsewidth_us);
+    printf("LAB_TIMER_ICAP : jumper PA_6 -> PB_6, pwm period = %lu [msec], pwm pulsewidth = %lu usec\r\n", pwm_period_ms, pwm_pulsewidth_us);
 
     while(1){
         distance = (float)timeInterval / 58.0;

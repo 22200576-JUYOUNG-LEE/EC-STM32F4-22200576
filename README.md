@@ -1556,3 +1556,949 @@ void USART2_IRQHandler(void) {
     }
 }
 ```
+
+
+
+## 9 Timer & Timer Interrupt (`ecTIM2.h` / `ecTIM2.c`)
+
+### Header File (`ecTIM2.h`)
+
+```c
+#include "stm32f411xe.h"
+#include "ecPinNames.h"
+#include "ecRCC2.h"
+#include "ecGPIO2.h"
+#include "math.h"
+
+// Timer Update Interrupt Initialization
+void TIM_UI_init(TIM_TypeDef* TIMx, uint32_t msec);
+void TIM_UI_init_us(TIM_TypeDef* TIMx, uint32_t usec);
+
+// Timer Update Interrupt On/Off
+void TIM_UI_enable(TIM_TypeDef* TIMx);
+void TIM_UI_disable(TIM_TypeDef* TIMx);
+
+// Timer Update Interrupt Flag
+uint32_t is_UIF(TIM_TypeDef *TIMx);
+void clear_UIF(TIM_TypeDef *TIMx);
+
+// Timer Counter Initialization
+void TIM_init(TIM_TypeDef *TIMx, uint32_t msec);
+void TIM_init_us(TIM_TypeDef *TIMx, uint32_t usec);
+
+// Timer Counter Period Config
+void TIM_period(TIM_TypeDef* TIMx, uint32_t msec);
+void TIM_period_us(TIM_TypeDef* TIMx, uint32_t usec);
+
+// Timer Counter Auxiliary Functions
+uint32_t get_TIM_IRQn(TIM_TypeDef* TIMx);
+void TIM_clock_enable(TIM_TypeDef* TIMx);
+```
+
+### Timer Summary
+
+| Timer | Counter | Bus (PLL 84 MHz) | IRQn |
+|---|---|---|---|
+| TIM1 | 16-bit (Advanced) | APB2 | `TIM1_UP_TIM10_IRQn` |
+| TIM2 | 32-bit | APB1 | `TIM2_IRQn` |
+| TIM3 | 16-bit | APB1 | `TIM3_IRQn` |
+| TIM4 | 16-bit | APB1 | `TIM4_IRQn` |
+| TIM5 | 32-bit | APB1 | `TIM5_IRQn` |
+| TIM9 | 16-bit | APB2 | `TIM1_BRK_TIM9_IRQn` |
+| TIM10 | 16-bit | APB2 | `TIM1_UP_TIM10_IRQn` |
+| TIM11 | 16-bit | APB2 | `TIM1_TRG_COM_TIM11_IRQn` |
+
+- Counter clock: `f_cnt = EC_SYSCLK / (PSC + 1)`
+- Update event period: `T = (ARR + 1) / f_cnt`
+- The library always uses **up-counting** mode.
+
+
+
+### 9.1 Timer Counter Initialization
+
+#### `TIM_init()`
+
+Enables the timer clock, sets the period in **msec** (`f_cnt = 10 kHz`), selects up-counter mode, and starts the counter (`CEN = 1`).
+
+```c
+void TIM_init(TIM_TypeDef *TIMx, uint32_t msec);
+```
+
+- **Parameters:**
+
+  - `TIMx`: Timer peripheral — `TIM1` ~ `TIM5`, `TIM9` ~ `TIM11`
+  - `msec`: Period in milliseconds (16-bit timer: `1` ~ `6,553` msec)
+
+- **Example Code:**
+
+  ```c
+  TIM_init(TIM3, 100);   // TIM3 update event every 100 ms
+  ```
+
+#### `TIM_init_us()`
+
+Same as `TIM_init()`, but the period is in **usec** (`f_cnt = 1 MHz`).
+
+```c
+void TIM_init_us(TIM_TypeDef *TIMx, uint32_t usec);
+```
+
+- **Parameters:**
+
+  - `TIMx`: Timer peripheral
+  - `usec`: Period in microseconds (16-bit timer: `1` ~ `65,536` usec)
+
+- **Example Code:**
+
+  ```c
+  TIM_init_us(TIM4, 500);   // TIM4 update event every 500 us
+  ```
+
+#### `TIM_period()`
+
+Sets `PSC` and `ARR` for a period in msec with `f_cnt = 10 kHz`.
+
+```c
+void TIM_period(TIM_TypeDef* TIMx, uint32_t msec);
+```
+
+- **Formula:**
+
+  - `PSC = EC_SYSCLK / 10,000 - 1` (84 MHz → `PSC = 8399`)
+  - `ARR = 10 × msec - 1`
+
+- **Limit:** 16-bit ARR (`ARR ≤ 0xFFFF`) → `msec ≤ 6,553`
+
+- **Example Code:**
+
+  ```c
+  TIM_period(TIM3, 500);   // 500 ms : PSC = 8399, ARR = 4999
+  ```
+
+#### `TIM_period_us()`
+
+Sets `PSC` and `ARR` for a period in usec with `f_cnt = 1 MHz`.
+
+```c
+void TIM_period_us(TIM_TypeDef* TIMx, uint32_t usec);
+```
+
+- **Formula:**
+
+  - `PSC = EC_SYSCLK / 1,000,000 - 1` (84 MHz → `PSC = 83`)
+  - `ARR = usec - 1`
+
+- **Limit:** 16-bit ARR → `usec ≤ 65,536`
+
+- **Example Code:**
+
+  ```c
+  TIM_period_us(TIM2, 20000);   // 20 ms : PSC = 83, ARR = 19999
+  ```
+
+#### `TIM_clock_enable()`
+
+Enables the timer peripheral clock in RCC: TIM1/TIM9/TIM10/TIM11 in `APB2ENR`, TIM2 ~ TIM5 in `APB1ENR`.
+
+```c
+void TIM_clock_enable(TIM_TypeDef* TIMx);
+```
+
+#### `get_TIM_IRQn()`
+
+Returns the NVIC IRQ number of the given timer (see the Timer Summary table).
+
+```c
+uint32_t get_TIM_IRQn(TIM_TypeDef* TIMx);
+```
+
+- **Return Value:** `IRQn_Type` value (e.g., `TIM3_IRQn`)
+
+
+
+### 9.2 Timer Update Interrupt
+
+#### `TIM_UI_init()`
+
+Initializes the timer with a period in msec (`TIM_init()`), enables the update interrupt (`UIE`), and enables the IRQ in the NVIC with priority **2**.
+
+```c
+void TIM_UI_init(TIM_TypeDef* TIMx, uint32_t msec);
+```
+
+- **Parameters:**
+
+  - `TIMx`: Timer peripheral
+  - `msec`: Interrupt period in milliseconds (16-bit timer: `1` ~ `6,553`)
+
+- **Note:** The matching `TIMx_IRQHandler()` must be defined, and `clear_UIF()` must be called inside it. Otherwise the interrupt is triggered again immediately.
+
+- **Example Code:**
+
+  ```c
+  TIM_UI_init(TIM3, 1);   // TIM3 interrupt every 1 ms
+  ```
+
+#### `TIM_UI_init_us()`
+
+Same as `TIM_UI_init()`, but the period is in usec (`TIM_init_us()`).
+
+```c
+void TIM_UI_init_us(TIM_TypeDef* TIMx, uint32_t usec);
+```
+
+- **Parameters:**
+
+  - `TIMx`: Timer peripheral
+  - `usec`: Interrupt period in microseconds (16-bit timer: `1` ~ `65,536`)
+
+- **Example Code:**
+
+  ```c
+  TIM_UI_init_us(TIM4, 100);   // TIM4 interrupt every 100 us
+  ```
+
+#### `TIM_UI_enable()` / `TIM_UI_disable()`
+
+Enables or disables the update interrupt (`DIER.UIE`). `TIM_UI_enable()` clears `UIF` first, so an old flag does not cause an immediate interrupt.
+
+```c
+void TIM_UI_enable(TIM_TypeDef* TIMx);
+void TIM_UI_disable(TIM_TypeDef* TIMx);
+```
+
+- **Example Code:**
+
+  ```c
+  TIM_UI_disable(TIM3);   // pause periodic interrupt
+  TIM_UI_enable(TIM3);    // resume
+  ```
+
+#### `is_UIF()`
+
+Checks the update interrupt flag (`SR.UIF`).
+
+```c
+uint32_t is_UIF(TIM_TypeDef *TIMx);
+```
+
+- **Return Value:** non-zero if an update event occurred, `0` otherwise
+
+#### `clear_UIF()`
+
+Clears the update interrupt flag (`SR.UIF`).
+
+```c
+void clear_UIF(TIM_TypeDef *TIMx);
+```
+
+- **Example Code:**
+
+  ```c
+  void TIM3_IRQHandler(void) {
+      if (is_UIF(TIM3)) {
+          // periodic task
+          clear_UIF(TIM3);
+      }
+  }
+  ```
+
+#### Complete Example Code (Timer Interrupt LED Blink)
+
+This example toggles the onboard LED (`PA_5`) every 1 second using a 1 ms TIM3 update interrupt.
+
+```c
+#include "ecSTM32F4v2.h"
+#include "ecTIM2.h"
+
+volatile uint32_t count = 0;
+
+void setup(void) {
+    RCC_PLL_init();              // 84 MHz
+    GPIO_init(LED_PIN, OUTPUT);  // PA_5
+    TIM_UI_init(TIM3, 1);        // 1 ms update interrupt
+}
+
+int main(void) {
+    setup();
+    while (1) {}
+}
+
+void TIM3_IRQHandler(void) {
+    if (is_UIF(TIM3)) {
+        count++;
+        if (count >= 1000) {     // 1000 x 1 ms = 1 sec
+            GPIO_write(LED_PIN, !GPIO_read(LED_PIN));
+            count = 0;
+        }
+        clear_UIF(TIM3);         // must clear the flag
+    }
+}
+```
+
+
+
+## 10 PWM (`ecPWM2.h` / `ecPWM2.c`)
+
+### Header File (`ecPWM2.h`)
+
+```c
+#include "math.h"
+#include "stm32f411xe.h"
+#include "ecGPIO2.h"
+#include "ecTIM2.h"
+
+// PWM Output Mode : OCxM field in CCMRx
+#define EC_PWM_MODE1    0   // output active while CNT <  CCR  (default)
+#define EC_PWM_MODE2    1   // output active while CNT >= CCR  (inverted)
+
+// PWM Initialization
+void PWM_init(PinName_t pinName, uint32_t msec);
+void PWM_init_us(PinName_t pinName, uint32_t usec);
+void PWM_init_config(PinName_t pinName, uint32_t usec);
+
+// Duty ratio / Pulse width
+void PWM_duty(PinName_t pinName, float duty);
+void PWM_pulsewidth(PinName_t pinName, uint32_t pulse_width_ms);
+void PWM_pulsewidth_us(PinName_t pinName, uint32_t pulse_width_us);
+
+// Internal Helper Functions
+void PWM_mode_config(TIM_TypeDef *TIMx, int chN, uint32_t mode);
+void PWM_pinmap(PinName_t pinName, TIM_TypeDef **TIMx, int *chN);
+```
+
+### PWM Pin Map
+
+| Pin | Timer / Channel | AF |
+|---|---|---|
+| `PA_0` | TIM2 CH1 | AF1 |
+| `PA_1` | TIM2 CH2 | AF1 |
+| `PA_5` | TIM2 CH1 | AF1 |
+| `PA_6` | TIM3 CH1 | AF2 |
+| `PA_8` | TIM1 CH1 | AF1 |
+| `PA_9` | TIM1 CH2 | AF1 |
+| `PA_10` | TIM1 CH3 | AF1 |
+| `PA_15` | TIM2 CH1 | AF1 |
+| `PB_3` | TIM2 CH2 | AF1 |
+| `PB_4` | TIM3 CH1 | AF2 |
+| `PB_5` | TIM3 CH2 | AF2 |
+| `PB_6` | TIM4 CH1 | AF2 |
+| `PB_7` | TIM4 CH2 | AF2 |
+| `PB_8` | TIM4 CH3 | AF2 |
+| `PB_9` | TIM4 CH4 | AF2 |
+| `PB_10` | TIM2 CH3 | AF1 |
+| `PC_6` | TIM3 CH1 | AF2 |
+| `PC_7` | TIM3 CH2 | AF2 |
+| `PC_8` | TIM3 CH3 | AF2 |
+| `PC_9` | TIM3 CH4 | AF2 |
+
+- Pins on the **same timer** share one period (`PSC`, `ARR`). Only the duty ratio (`CCRx`) can be different per channel.
+- `PA_0`, `PA_5` and `PA_15` all use **TIM2 CH1**, so they cannot output different PWM signals at the same time.
+- TIM5 and TIM9 ~ TIM11 are not mapped in `PWM_pinmap()` yet.
+
+### PWM Mode
+
+| Mode | `OCxM` | Output (up-counting) |
+|---|---|---|
+| `EC_PWM_MODE1` | `110` | HIGH while `CNT < CCR`, LOW otherwise |
+| `EC_PWM_MODE2` | `111` | LOW while `CNT < CCR`, HIGH otherwise |
+
+- Duty ratio (Mode 1): `duty = CCR / (ARR + 1)`
+
+
+
+### 10.1 PWM Initialization
+
+#### `PWM_init()`
+
+Initializes a PWM output pin with a period in **msec**. Default: PWM Mode 1, active high, 50% duty.
+
+```c
+void PWM_init(PinName_t pinName, uint32_t msec);
+```
+
+- **Parameters:**
+
+  - `pinName`: PWM pin of type `PinName_t` (see PWM Pin Map)
+  - `msec`: PWM period in milliseconds (`0` is changed to `1`)
+
+- **Range:**
+
+  - TIM2/TIM5 (32-bit): `1` ~ `4,294,967` msec
+  - TIM1/TIM3/TIM4 (16-bit): `1` ~ `6,553` msec
+
+- **Example Code:**
+
+  ```c
+  PWM_init(PA_1, 20);   // 20 ms period (50 Hz) for RC servo motor
+  ```
+
+#### `PWM_init_us()`
+
+Initializes a PWM output pin with a period in **usec**. Use it for high frequency PWM (1 kHz ~ 100 kHz). Default: PWM Mode 1, active high, 50% duty.
+
+```c
+void PWM_init_us(PinName_t pinName, uint32_t usec);
+```
+
+- **Parameters:**
+
+  - `pinName`: PWM pin of type `PinName_t`
+  - `usec`: PWM period in microseconds (minimum `10` usec = 100 kHz)
+
+- **Example Code:**
+
+  ```c
+  PWM_init_us(PA_5, 1000);   // 1 kHz PWM on onboard LED
+  ```
+
+#### `PWM_init_config()`
+
+Internal function called by `PWM_init()` and `PWM_init_us()`. Steps:
+
+1. Finds the timer and channel from the pin (`PWM_pinmap()`).
+2. Sets the GPIO pin as Alternate Function and writes the AF number to `AFR[0]` (pin 0~7) or `AFR[1]` (pin 8~15).
+   - AF1: TIM1, TIM2 / AF2: TIM3, TIM4 / AF3: TIM9 ~ TIM11
+3. Initializes the timer:
+   - TIM2/TIM5, or `usec ≤ 65,536` → `TIM_init_us()` (`f_cnt = 1 MHz`)
+   - 16-bit timer with `usec > 65,536` → `TIM_init()` (`f_cnt = 10 kHz`, max 6,553 msec)
+4. Sets PWM Mode 1, preload enable, 50% duty, active high, and enables the channel output (`PWM_mode_config()`).
+5. For TIM1 only, sets the main output enable (`BDTR.MOE`). Then generates an update event (`EGR.UG`), clears `UIF`, and starts the counter.
+
+```c
+void PWM_init_config(PinName_t pinName, uint32_t usec);
+```
+
+- **Parameters:**
+
+  - `pinName`: PWM pin of type `PinName_t`
+  - `usec`: PWM period in microseconds
+
+- **Note:** TIM1 (advanced timer) does not output any signal without `MOE = 1`.
+
+
+
+### 10.2 Duty Ratio Setup
+
+#### `PWM_duty()`
+
+Sets the duty ratio of the PWM pin. Values outside `0.0` ~ `1.0` are clipped.
+
+```c
+void PWM_duty(PinName_t pinName, float duty);
+```
+
+- **Formula:** `CCRx = (ARR + 1) × duty`
+
+- **Parameters:**
+
+  - `pinName`: PWM pin of type `PinName_t`
+  - `duty`: Duty ratio `0.0` (always LOW) ~ `1.0` (always HIGH)
+
+- **Example Code:**
+
+  ```c
+  PWM_duty(PA_5, 0.25f);   // 25% duty
+  ```
+
+#### `PWM_pulsewidth()`
+
+Sets the HIGH time of the PWM pulse in **msec**. It is converted to a duty ratio and applied with `PWM_duty()`.
+
+```c
+void PWM_pulsewidth(PinName_t pinName, uint32_t pulse_width_ms);
+```
+
+- **Formula:**
+
+  - `f_cnt = EC_SYSCLK / (PSC + 1)`
+  - `counts = f_cnt × pulse_width_ms / 1000`
+  - `duty = counts / (ARR + 1)`
+
+- **Parameters:**
+
+  - `pinName`: PWM pin of type `PinName_t`
+  - `pulse_width_ms`: Pulse width in milliseconds (must be smaller than the period)
+
+- **Example Code:**
+
+  ```c
+  PWM_init(PB_6, 100);
+  PWM_pulsewidth(PB_6, 30);   // 30 ms HIGH in 100 ms period (30%)
+  ```
+
+#### `PWM_pulsewidth_us()`
+
+Sets the HIGH time of the PWM pulse in **usec**.
+
+```c
+void PWM_pulsewidth_us(PinName_t pinName, uint32_t pulse_width_us);
+```
+
+- **Formula:** `counts = f_cnt × pulse_width_us / 1,000,000`, `duty = counts / (ARR + 1)`
+
+- **Parameters:**
+
+  - `pinName`: PWM pin of type `PinName_t`
+  - `pulse_width_us`: Pulse width in microseconds
+
+- **Example Code:**
+
+  ```c
+  PWM_init(PA_1, 20);               // 20 ms period
+  PWM_pulsewidth_us(PA_1, 1500);    // 1.5 ms pulse → servo 90°
+  ```
+
+
+
+### 10.3 Internal Helper Functions
+
+#### `PWM_mode_config()`
+
+Configures the output compare channel of the timer for PWM output.
+
+- `OCxM` = `110` (Mode 1) or `111` (Mode 2) in `CCMR1` (CH1, CH2) / `CCMR2` (CH3, CH4)
+- `OCxPE = 1`: CCR preload enable (new CCR value is applied at the next update event)
+- `CCRx = ARR / 2`: 50% duty by default
+- `CCxP = 0`: active high, `CCxE = 1`: channel output enable
+
+```c
+void PWM_mode_config(TIM_TypeDef *TIMx, int chN, uint32_t mode);
+```
+
+- **Parameters:**
+
+  - `TIMx`: Timer peripheral
+  - `chN`: Channel number `1` ~ `4`
+  - `mode`: `EC_PWM_MODE1` or `EC_PWM_MODE2`
+
+#### `PWM_pinmap()`
+
+Returns the timer (`TIMx`) and channel number (`chN`) connected to the given pin (see PWM Pin Map).
+
+```c
+void PWM_pinmap(PinName_t pinName, TIM_TypeDef **TIMx, int *chN);
+```
+
+- **Parameters:**
+
+  - `pinName`: PWM pin of type `PinName_t`
+  - `TIMx`: Pointer where the timer address will be stored
+  - `chN`: Pointer where the channel number will be stored
+
+- **Example Code:**
+
+  ```c
+  TIM_TypeDef *TIMx;
+  int chN;
+  PWM_pinmap(PA_1, &TIMx, &chN);   // TIMx = TIM2, chN = 2
+  ```
+
+
+
+#### Complete Example Code (RC Servo Motor Sweep)
+
+This example drives an RC servo motor on `PA_1` (TIM2 CH2) with a 20 ms PWM period. Every 500 ms (TIM3 interrupt), the pulse width changes from 0.5 ms (0°) to 2.5 ms (180°) in 10 steps. The button (`PC_13`, EXTI) resets the angle to 0°.
+
+```c
+#include "ecSTM32F4v2.h"
+#include "ecTIM2.h"
+#include "ecPWM2.h"
+
+#define PWM_PIN    PA_1
+
+volatile uint32_t angleStep = 0;    // 0 ~ 10 → 0° ~ 180°
+volatile uint32_t dir = 0;          // 0 = increase, 1 = decrease
+
+void setup(void) {
+    RCC_PLL_init();                  // 84 MHz
+    SysTick_init();
+
+    // Button (PC_13) EXTI
+    GPIO_init(SW1_PIN, INPUT);
+    GPIO_pupd(SW1_PIN, PULL_DOWN);
+    EXTI_init(SW1_PIN, FALL, 0);
+
+    // PWM : 20 ms period, 0.5 ms pulse (0°)
+    PWM_init(PWM_PIN, 20);
+    PWM_pulsewidth_us(PWM_PIN, 500);
+
+    // TIM3 : 500 ms update interrupt
+    TIM_UI_init(TIM3, 500);
+}
+
+int main(void) {
+    setup();
+    while (1) {}
+}
+
+// Change angle every 500 ms
+void TIM3_IRQHandler(void) {
+    if (is_UIF(TIM3)) {
+        if (dir == 0) { angleStep++; if (angleStep >= 10) dir = 1; }
+        else          { angleStep--; if (angleStep == 0)  dir = 0; }
+
+        // 0.5 ms + 0.2 ms per step → 0.5 ms ~ 2.5 ms
+        PWM_pulsewidth_us(PWM_PIN, 500 + 200 * angleStep);
+
+        clear_UIF(TIM3);
+    }
+}
+
+// Button: reset angle to 0°
+void EXTI15_10_IRQHandler(void) {
+    if (is_pending_EXTI(SW1_PIN)) {
+        angleStep = 0;
+        dir = 0;
+        PWM_pulsewidth_us(PWM_PIN, 500);
+        clear_pending_EXTI(SW1_PIN);
+    }
+}
+```
+
+
+
+## 11 Timer Input Capture (`ecICAP2.h` / `ecICAP2.c`)
+
+### Header File (`ecICAP2.h`)
+
+```c
+#include "stm32f411xe.h"
+#include "ecRCC2.h"
+#include "ecGPIO2.h"
+#include "ecTIM2.h"
+#include <math.h>
+
+// Edge Type
+#define IC_RISE 0
+#define IC_FALL 1
+#define IC_BOTH 2
+
+// Input Capture Number
+#define IC_1 1
+#define IC_2 2
+#define IC_3 3
+#define IC_4 4
+
+// Input Capture Filter
+#define IC_FILTER_0     0   // no filter, transition sampled at fDTS
+#define IC_FILTER_1     1   // N = 2 samples at fCK_INT
+#define IC_FILTER_2     2   // N = 4 samples at fCK_INT
+#define IC_FILTER_3     3   // N = 8 samples at fCK_INT
+
+// Input Capture Initialization
+void ICAP_init(PinName_t pinName, uint32_t edge_type);
+void ICAP_ICn_init(PinName_t pinName, uint32_t edge_type, uint32_t ICn);
+void ICAP_tick(PinName_t pinName, uint32_t usec);
+uint32_t ICAP_read(PinName_t pinName, uint32_t ICn);
+
+// Capture/Compare Interrupt Flag
+uint32_t is_CCIF(TIM_TypeDef *TIMx, uint32_t ICn);
+void clear_CCIF(TIM_TypeDef *TIMx, uint32_t ICn);
+
+// Internal Functions
+void ICAP_pinmap(PinName_t pinName, TIM_TypeDef **TIMx, int *chN);
+void ICAP_filter(TIM_TypeDef *TIMx, uint32_t ICn, uint16_t filterOpt);
+void ICAP_ICn_select(TIM_TypeDef *TIMx, uint32_t TIn, uint32_t ICn);
+```
+
+### Input Capture Overview
+
+- When the selected edge appears on the pin, the current counter value (`CNT`) is copied to `CCRn`, and the `CCnIF` flag is set.
+- **TIn** is the timer input pin channel (e.g., `PB_6` = TIM4 **TI1**). **ICn** is the capture channel that stores the value in `CCRn`.
+- One pin (TI1) can be connected to two capture channels: **IC1** (direct, `CCxS = 01`) and **IC2** (indirect, `CCxS = 10`). Using IC1 = rising edge and IC2 = falling edge, the pulse width of one signal can be measured.
+
+| TIn (pin) | Direct ICn (`CCxS = 01`) | Indirect ICn (`CCxS = 10`) |
+|---|---|---|
+| TI1 | IC1 | IC2 |
+| TI2 | IC2 | IC1 |
+| TI3 | IC3 | IC4 |
+| TI4 | IC4 | IC3 |
+
+- **Time between two captures:**
+
+  `Δt = [ (CCR_b − CCR_a) + ovf_cnt × (ARR + 1) ] × tick`
+
+  `ovf_cnt` is the number of counter overflows (Update events) between the two captures.
+
+### Input Capture Pin Map
+
+The pin map is the same as the PWM pin map (section 10).
+
+| Pin | Timer / TIn | AF |
+|---|---|---|
+| `PA_0`, `PA_5`, `PA_15` | TIM2 TI1 | AF1 |
+| `PA_1` | TIM2 TI2 | AF1 |
+| `PA_6` | TIM3 TI1 | AF2 |
+| `PA_8` / `PA_9` / `PA_10` | TIM1 TI1 / TI2 / TI3 | AF1 |
+| `PB_3` | TIM2 TI2 | AF1 |
+| `PB_4` / `PB_5` | TIM3 TI1 / TI2 | AF2 |
+| `PB_6` / `PB_7` / `PB_8` / `PB_9` | TIM4 TI1 / TI2 / TI3 / TI4 | AF2 |
+| `PB_10` | TIM2 TI3 | AF1 |
+| `PC_6` / `PC_7` / `PC_8` / `PC_9` | TIM3 TI1 / TI2 / TI3 / TI4 | AF2 |
+
+- `ICAP_ICn_init()` also sets AF2 for TIM5 and AF3 for TIM9 ~ TIM11, but these timers are not mapped in `ICAP_pinmap()` yet.
+
+
+
+### 11.1 Input Capture Initialization
+
+#### `ICAP_init()`
+
+Initializes Input Capture on the pin with the **default capture channel (ICn = TIn)** and a **1 usec tick**.
+
+```c
+void ICAP_init(PinName_t pinName, uint32_t edge_type);
+```
+
+- **Parameters:**
+
+  - `pinName`: Input Capture pin of type `PinName_t` (see Pin Map)
+  - `edge_type`: `IC_RISE` (`0`), `IC_FALL` (`1`), `IC_BOTH` (`2`)
+
+- **Example Code:**
+
+  ```c
+  ICAP_init(PB_6, IC_RISE);   // TIM4 TI1 → IC1, rising edge
+  ```
+
+#### `ICAP_ICn_init()`
+
+Initializes Input Capture on the pin with a **user-selected capture channel (ICn)**. Steps:
+
+1. **GPIO**: AF mode, no pull-up/pull-down, high speed, and the AF number in `AFR` (AF1: TIM1/TIM2, AF2: TIM3 ~ TIM5, AF3: TIM9 ~ TIM11).
+2. **Timer**: Enables the clock, the Update Interrupt and the NVIC (priority 2) using `TIM_UI_init_us()`. Then sets tick = 1 usec and ARR = maximum (`ICAP_tick()`). The counter is stopped during configuration.
+3. **Input Capture**:
+   - Connects TIn to ICn (`ICAP_ICn_select()`, `CCxS` in `CCMRx`)
+   - Input filter: `IC_FILTER_3` (N = 8 samples), for this channel only
+   - Capture prescaler: default (capture every edge)
+   - Edge (`CCnP` / `CCnNP` in `CCER`): rising `00`, falling `01`, both `11`
+   - Enables capture (`CCnE`)
+4. **Interrupt**: Enables the capture interrupt (`CCnIE`) and the update interrupt (`UIE`) in `DIER`, then starts the counter.
+
+```c
+void ICAP_ICn_init(PinName_t pinName, uint32_t edge_type, uint32_t ICn);
+```
+
+- **Parameters:**
+
+  - `pinName`: Input Capture pin of type `PinName_t`
+  - `edge_type`: `IC_RISE`, `IC_FALL`, `IC_BOTH`
+  - `ICn`: Capture channel `IC_1` ~ `IC_4` (must be a direct or indirect channel of TIn, see the table above)
+
+- **Note:**
+
+  - Both `CCnIE` and `UIE` are enabled, so the matching `TIMx_IRQHandler()` must be defined, and it must clear **both** `CCnIF` and `UIF`.
+  - Every call resets the tick to 1 usec. Call `ICAP_tick()` **after** all `ICAP_init()` / `ICAP_ICn_init()` calls.
+
+- **Example Code:**
+
+  ```c
+  ICAP_init(PB_6, IC_RISE);              // TI1 → IC1 : rising edge
+  ICAP_ICn_init(PB_6, IC_FALL, IC_2);    // TI1 → IC2 : falling edge
+  ICAP_tick(PB_6, 10);                   // tick = 10 usec  <- last
+  ```
+
+#### `ICAP_tick()`
+
+Sets the counter tick (time of one count) in **usec** by changing `PSC`. `ARR` is set to maximum (`0xFFFF`, or `0xFFFFFFFF` for TIM2/TIM5). Then generates an update event (`UG`) and clears `UIF`.
+
+```c
+void ICAP_tick(PinName_t pinName, uint32_t usec);
+```
+
+- **Formula:**
+
+  - `PSC = usec × EC_SYSCLK / 1,000,000 − 1`
+  - `f_cnt = EC_SYSCLK / (PSC + 1) = 1 / tick`
+
+- **Parameters:**
+
+  - `pinName`: Input Capture pin of type `PinName_t`
+  - `usec`: Tick in microseconds (`0` is changed to `1`)
+
+- **Range:** PSC is 16-bit → `1` ~ `780` usec at 84 MHz (larger values are clamped to `PSC = 65535`).
+
+- **Note:** `TIM_init_us()` / `TIM_period_us()` cannot be used for Input Capture, because they fix `PSC` for a 1 MHz counter and set `ARR` by the period.
+
+- **Example Code:**
+
+  ```c
+  ICAP_tick(PB_6, 10);   // 84 MHz: PSC = 839, ARR = 0xFFFF
+                         // overflow period = 65536 × 10 us ≈ 655 ms
+  ```
+
+#### `ICAP_read()`
+
+Returns the captured counter value `CCRn` of the given capture channel.
+
+```c
+uint32_t ICAP_read(PinName_t pinName, uint32_t ICn);
+```
+
+- **Parameters:**
+
+  - `pinName`: Input Capture pin of type `PinName_t`
+  - `ICn`: Capture channel `IC_1` ~ `IC_4`
+
+- **Return Value:** Captured counter value (in ticks)
+
+- **Note:** Reading `CCRn` also clears `CCnIF` in hardware.
+
+- **Example Code:**
+
+  ```c
+  uint32_t t1 = ICAP_read(PB_6, IC_1);
+  ```
+
+
+
+### 11.2 Capture/Compare Interrupt Flag
+
+#### `is_CCIF()`
+
+Checks the capture/compare interrupt flag `CCnIF` (`SR` bit n).
+
+```c
+uint32_t is_CCIF(TIM_TypeDef *TIMx, uint32_t ICn);
+```
+
+- **Parameters:**
+
+  - `TIMx`: Timer peripheral
+  - `ICn`: Capture channel `1` ~ `4`
+
+- **Return Value:** `1` if a capture occurred, `0` otherwise
+
+#### `clear_CCIF()`
+
+Clears the capture/compare interrupt flag `CCnIF`. Only that bit is written as `0`, so the other flags are not changed (`SR` bits are cleared by writing `0`).
+
+```c
+void clear_CCIF(TIM_TypeDef *TIMx, uint32_t ICn);
+```
+
+- **Example Code:**
+
+  ```c
+  if (is_CCIF(TIM4, IC_1)) {
+      time1 = ICAP_read(PB_6, IC_1);
+      clear_CCIF(TIM4, IC_1);
+  }
+  ```
+
+
+
+### 11.3 Internal Functions
+
+#### `ICAP_pinmap()`
+
+Returns the timer (`TIMx`) and the timer input channel (`TIn`) connected to the pin (see Pin Map).
+
+```c
+void ICAP_pinmap(PinName_t pinName, TIM_TypeDef **TIMx, int *chN);
+```
+
+#### `ICAP_filter()`
+
+Sets the input filter `ICnF` (4 bits) of one capture channel. `ICnF` is at bit 4 (IC1, IC3) or bit 12 (IC2, IC4) of `CCMR1` (IC1, IC2) / `CCMR2` (IC3, IC4). An edge is accepted only after N stable samples, so short noise pulses are removed.
+
+```c
+void ICAP_filter(TIM_TypeDef *TIMx, uint32_t ICn, uint16_t filterOpt);
+```
+
+- **Parameters:**
+
+  - `TIMx`: Timer peripheral
+  - `ICn`: Capture channel `1` ~ `4`
+  - `filterOpt`: `IC_FILTER_0` ~ `IC_FILTER_3`
+
+- **Note:** Only the selected channel is written. In `CCMRx`, the `ICxF` bits are at the same position as the `OCxM` bits, so writing every channel would change a PWM output channel on the same timer.
+
+#### `ICAP_ICn_select()`
+
+Connects the timer input `TIn` to the capture channel `ICn` by setting `CCnS` in `CCMRx`.
+
+- `ICn == TIn` → `CCnS = 01` (direct)
+- `ICn != TIn` → `CCnS = 10` (indirect: TI1 ↔ IC2, TI3 ↔ IC4)
+
+```c
+void ICAP_ICn_select(TIM_TypeDef *TIMx, uint32_t TIn, uint32_t ICn);
+```
+
+- **Parameters:**
+
+  - `TIMx`: Timer peripheral
+  - `TIn`: Timer input channel of the pin `1` ~ `4`
+  - `ICn`: Capture channel `1` ~ `4`
+
+
+
+#### Complete Example Code (Ultrasonic Distance Sensor HC-SR04)
+
+The HC-SR04 sends a HIGH pulse on ECHO whose width is the round-trip time of the ultrasonic wave.
+
+- TRIG (`PA_6`, TIM3 CH1): PWM, 50 ms period, 10 us pulse
+- ECHO (`PB_6`, TIM4 TI1): IC1 = rising edge, IC2 = falling edge, tick = 10 us
+- Distance [cm] = pulse width [us] / 58
+
+```c
+#include "ecSTM32F4v2.h"
+#include "ecTIM2.h"
+#include "ecPWM2.h"
+#include "ecICAP2.h"
+#include "ecUART2.h"
+
+#define TRIG    PA_6
+#define ECHO    PB_6
+#define TICK_US 10
+
+volatile uint32_t ovf_cnt = 0;
+volatile uint32_t time1 = 0, time2 = 0;
+volatile float    distance = 0.0f;
+
+void setup(void) {
+    RCC_PLL_init();                        // 84 MHz
+    SysTick_init();
+    USART2_init();                         // printf → PC
+
+    // TRIG : PWM 50 ms period, 10 us pulse
+    PWM_init(TRIG, 50);
+    PWM_pulsewidth_us(TRIG, 10);
+
+    // ECHO : Input Capture
+    ICAP_init(ECHO, IC_RISE);              // TI1 → IC1 : rising edge
+    ICAP_ICn_init(ECHO, IC_FALL, IC_2);    // TI1 → IC2 : falling edge
+    ICAP_tick(ECHO, TICK_US);              // tick = 10 us  <- last
+}
+
+int main(void) {
+    setup();
+    while (1) {
+        printf("Distance: %.1f cm\r\n", distance);
+        delay_ms(500);
+    }
+}
+
+void TIM4_IRQHandler(void) {
+    // Counter overflow
+    if (is_UIF(TIM4)) {
+        ovf_cnt++;
+        clear_UIF(TIM4);
+    }
+    // Rising edge : pulse start
+    if (is_CCIF(TIM4, IC_1)) {
+        time1 = ICAP_read(ECHO, IC_1);
+        ovf_cnt = 0;
+        clear_CCIF(TIM4, IC_1);
+    }
+    // Falling edge : pulse end
+    if (is_CCIF(TIM4, IC_2)) {
+        time2 = ICAP_read(ECHO, IC_2);
+        uint32_t ticks = (time2 - time1) + ovf_cnt * (TIM4->ARR + 1);
+        distance = (float)(ticks * TICK_US) / 58.0f;   // [cm]
+        ovf_cnt = 0;
+        clear_CCIF(TIM4, IC_2);
+    }
+}
+```

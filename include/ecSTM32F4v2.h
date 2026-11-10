@@ -29,7 +29,7 @@ Description      : STM32 F411 Library
 #include "ecTIM2.h"
 #include "ecPWM2.h"
 #include "ecICAP2.h"
-//#include "ecADC2.h"
+// #include "ecADC2.h"
 
 #define BUTTON_PIN                 PC_13
 #define LED_PIN                 PA_5

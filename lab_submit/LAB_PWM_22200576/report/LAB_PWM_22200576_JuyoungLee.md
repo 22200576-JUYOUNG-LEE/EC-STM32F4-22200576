@@ -6,13 +6,11 @@
 
 **Github:** [22200576-JUYOUNG-LEE/EC-STM32F4-22200576: Firmware for STM32F4, Embedded Controller, HGU](https://github.com/22200576-JUYOUNG-LEE/EC-STM32F4-22200576)
 
-**Demo Video:** 
+**Demo Video:** [[EC 26-2\] LAB(PWM)](https://www.youtube.com/watch?v=ttdh0_E7dRk)
 
 ## Introduction
 
 Create a simple program that control a sevo motor and a DC motor with PWM output.
-
-
 
 ### Requirement
 
@@ -82,7 +80,7 @@ Modified         : 11-02-2026
 Language/ver     : C in VS Code (PlatformIO)
 
 Description      : LAB - PWM RC Servo Motor (SG90)
-                   - PWM   : PA_1 (TIM2_CH1), period 20 ms (50 Hz),
+                   - PWM   : PA_1 (TIM2_CH2), period 20 ms (50 Hz),
                              pulse 0.5 ~ 2.5 ms  (0 ~ 180 deg)
                    - TIM3  : Update interrupt every 500 ms
                              angle 0 -> 180 -> 0, step 10 deg
@@ -92,7 +90,7 @@ Description      : LAB - PWM RC Servo Motor (SG90)
 #include "ecSTM32F4v2.h"
 
 // ---------------- Pin & Parameter ----------------
-#define PWM_MOTOR     PA_1       // TIM2_CH1 (Configuration table: PA_1 = TIM2_CH2)
+#define PWM_MOTOR     PA_1       // TIM2_CH2 (Configuration table: PA_1 = TIM2_CH2)
 
 #define PWM_PERIOD    20          // [ms]  50 Hz
 #define PULSE_MIN_US  500         // [us]  0 deg
@@ -173,7 +171,9 @@ void EXTI15_10_IRQHandler(void) {                  // PC13 -> EXTI line 13
 
 
 
-Add [demo video link](https://github.com/ykkimhgu/course-doc/blob/master/ec-course/lab/link/README.md)
+**Demo video**: [[EC 26-2\] LAB(PWM)](https://www.youtube.com/watch?v=ttdh0_E7dRk)
+
+
 
 #### Discussion
 
@@ -259,6 +259,16 @@ The program needs to design a smart mini-fan device that runs only when the face
 - `TIM3_IRQHandler()`: Runs every 1 ms. In BLINK mode it toggles the LED every 1000 counts (1 s). Every 2000 counts (2 s) it sets `print_flag`, and `printf()` is called in the main loop instead of inside the ISR, so the ISR stays short.
 
 ```c
+/*----------------------------------------------------------------
+@ Embedded Controller by Young-Keun Kim - Handong Global University
+Author           : Juyoung Lee
+Created          : 10-13-2026
+Modified         : 11-02-2026
+Language/ver     : C in VS Code (PlatformIO)
+
+Description      : LAB - PWM DC Motor
+/----------------------------------------------------------------*/
+
 #include "ecSTM32F4v2.h"
 
 // ---------------- Pin & Parameter ----------------
@@ -403,7 +413,7 @@ void TIM3_IRQHandler(void) {
 >
 > ![image-20261108003259563](./img/image-20261108003259563.png)
 
-Add [demo video link](https://github.com/ykkimhgu/course-doc/blob/master/ec-course/lab/link/README.md)
+**demo video** : [EC 26-2\] LAB(PWM)](https://www.youtube.com/watch?v=ttdh0_E7dRk&t=28) play since 28 sec
 
 ### Reference
 
@@ -416,23 +426,34 @@ Add [demo video link](https://github.com/ykkimhgu/course-doc/blob/master/ec-cour
 
 #### 1. motor PWM duty ratio for different DIR
 
-When, DIR=0 duty=0.8--> PWM 0.8 // 실제 모터에 전달되는 pwm
+> The L9110S driver turns the motor with the voltage difference between A-IA (PWM) and A-IB (DIR). When DIR = 0, the motor is driven while the PWM is HIGH, so the effective duty equals the PWM duty. When DIR = 1, the motor is driven while the PWM is LOW, so the effective duty is inverted (duty 0.8 gives 0.2 at the motor). To get the same speed in both directions, the duty must be compensated as follows:
 
-Whe, DIR=1 duty=0.8--> PWM 0.2 // 실제 모터에 전달되는 PWM
+c
 
-* Sample Solution
-
-```c++
-float targetPWM;  // pwm for motor input 
-float duty=abs(DIR-targetPWM); // duty with consideration of DIR=1 or 0
-
-PWM_duty(PWM_PIN, duty);
+```c
+float targetPWM;                       // desired motor speed (0.0 ~ 1.0)
+float duty = fabs(DIR - targetPWM);    // DIR = 0 → targetPWM, DIR = 1 → 1 − targetPWM
+PWM_duty(PWM_MOTOR, duty);
 ```
+
+> In this lab the fan only rotates in one direction, so `stateOutput()` keeps `MOTOR_DIR_PIN` LOW. The duty from the FSM table (0, 0.5, 1.0) is therefore applied to the motor directly without inversion.
+
+
 
 #### 2. Motor does not run under duty 0.5
 
-Configure motor PWM period above 1kHz
+>  When the PWM frequency is too low, the motor current rises and falls within each period, and at low duty the average torque is not enough to overcome static friction. As a result, the motor may not start in MID mode (50 %). To prevent this, the PWM period was set to 1 ms (1 kHz) with `PWM_init_us(PWM_MOTOR, 1000)`. If the motor still does not start at 50 %, the period can be reduced further (for example, 500 µs = 2 kHz).
 
 #### 3. Check and give different Interrupt Priority
 
-Check if you have different NVIC priority number for each IRQs
+>  Two interrupts are used in this lab: EXTI15_10 for the button and TIM3 for the 1 ms timer. If they have the same priority, one interrupt cannot preempt the other, and a button event may be delayed or missed while the timer ISR runs every 1 ms. To prevent this, the button EXTI was given a higher priority (0) than TIM3 (2):
+
+c
+
+```c
+EXTI_init(BUTTON_PIN, FALL, 0);        // button: priority 0 (highest)
+TIM_UI_init(TIM3, STEP_TIME);
+NVIC_SetPriority(TIM3_IRQn, 2);        // timer: priority 2
+```
+
+>  In addition, both ISRs were kept short: the button ISR only sets `btn_flag`, and the timer ISR only toggles the LED and sets `print_flag`. `printf()` is called in the main loop, not inside an ISR.
